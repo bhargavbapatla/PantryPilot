@@ -13,6 +13,8 @@ import DashboardLayout from '../layout/DashboardLayout';
 const Dashboard = lazy(() => import('../pages/auth/dashboard'));
 const Inventory = lazy(() => import('../pages/auth/Inventory'));
 const Recipes = lazy(() => import('../pages/auth/recipe'));
+const Orders = lazy(() => import('../pages/auth/orders'));
+const Settings = lazy(() => import('../pages/auth/settings'));
 const Login = lazy(() => import('../pages/auth/login'));
 const Signup = lazy(() => import('../pages/auth/signup'));
 const Landing = lazy(() => import('../pages/auth/landingPage'));
@@ -43,6 +45,8 @@ const AppRoutes = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/recipes" element={<Recipes />} />
+            <Route path="/dashboard/orders" element={<Orders />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>
 
