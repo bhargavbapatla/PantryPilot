@@ -23,8 +23,8 @@ const Login = () => {
     }),
     onSubmit: (values) => {
       // handle login submit with values.email and values.password
-      console.log('Login values:', values);
-      const mockUser = { id: '1', name: 'Mom', email: 'mom@bakery.com', role: 'user' };
+      console.log('Login values:', values, values.email.split('@')[0]);
+      const mockUser = { id: '1', name: values.email.split('@')[0], email: values.email, role: 'user' };
       const mockToken = 'abc-123-xyz';
 
       login(mockUser, mockToken);
