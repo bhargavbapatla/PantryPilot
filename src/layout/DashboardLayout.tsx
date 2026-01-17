@@ -28,6 +28,7 @@ import {
   Assessment as ReportsIcon,
   RestaurantMenu as RecipesIcon,
   Logout as LogoutIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 
 const DashboardLayout = () => {
@@ -65,6 +66,11 @@ const DashboardLayout = () => {
       label: 'Reports & Analysis',
       to: '/dashboard/reports',
       icon: <ReportsIcon fontSize="small" />,
+    },
+    {
+      label: 'Settings',
+      to: '/settings',
+      icon: <SettingsIcon fontSize="small" />,
     },
   ];
 

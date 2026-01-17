@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { type ColumnDef } from "@tanstack/react-table";
 import * as Yup from "yup";
 import { FormikProvider, useFormik } from "formik";
+import Drawer from "@mui/material/Drawer";
 import Button from "../../../components/Button";
 import DataTable from "../../../components/table/DataTable";
 import TextField from "../../../components/TextField";
@@ -32,21 +33,15 @@ const Recipes = () => {
   const items = useSelector((state: RootState) => state.recipes.items);
   const inventoryItems = useSelector((state: RootState) => state.inventory.items);
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [editingItem, setEditingItem] = useState<RecipeItem | null>(null);
-  const transitionMs = 200;
 
   const handleOpen = () => {
-    setMounted(true);
-    requestAnimationFrame(() => setOpen(true));
+    setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setTimeout(() => {
-      setMounted(false);
-      setEditingItem(null);
-    }, transitionMs);
+    setEditingItem(null);
   };
 
   const formik = useFormik({
@@ -57,12 +52,12 @@ const Recipes = () => {
       description: editingItem?.description ?? "",
       ingredients: editingItem
         ? editingItem.ingredients.map<IngredientForm>((ing) => ({
-            id: ing.id,
-            inventoryId: ing.inventoryId ?? "",
-            quantityNeeded:
-              ing.quantityNeeded !== undefined ? String(ing.quantityNeeded) : "",
-            unit: ing.unit ?? "grams",
-          }))
+          id: ing.id,
+          inventoryId: ing.inventoryId ?? "",
+          quantityNeeded:
+            ing.quantityNeeded !== undefined ? String(ing.quantityNeeded) : "",
+          unit: ing.unit ?? "grams",
+        }))
         : [],
     },
     validationSchema: Yup.object({
@@ -75,9 +70,15 @@ const Recipes = () => {
     }),
     onSubmit: (values, helpers) => {
       let hasInventoryError = false;
-
+      if (values.ingredients.length === 0) {
+        toast.error("Add at least one ingredient");
+        return;
+      }
+      console.log("VALLLL", values.ingredients);
       values.ingredients.forEach((ing, index) => {
-        if (!ing.inventoryId) {
+        if (!ing.inventoryId || ing.inventoryId === "") {
+          hasInventoryError = true;
+          toast.error(`Row ${index + 1}: Select an ingredient`);
           return;
         }
 
@@ -94,8 +95,7 @@ const Recipes = () => {
         if (!Number.isFinite(requestedQuantity) || requestedQuantity <= 0) {
           hasInventoryError = true;
           toast.error(
-            `Row ${index + 1}: Enter a quantity greater than 0 for ${
-              inventoryItem.name
+            `Row ${index + 1}: Enter a quantity greater than 0 for ${inventoryItem.name
             }`
           );
           return;
@@ -287,245 +287,242 @@ const Recipes = () => {
       </div>
       <DataTable columns={columns} data={items} />
 
-      {mounted && (
-        <div className={`fixed inset-0 z-50 flex justify-end ${open ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-out`}>
-          <div
-            className={`absolute inset-0 bg-black/40 ${open ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}
-            onClick={handleClose}
-          />
-          <div
-            className={`relative h-full w-full max-w-md bg-white shadow-lg transform transition-all duration-200 ease-out ${
-              open ? 'translate-x-0' : 'translate-x-full'
-            } flex flex-col`}
-            role="dialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={handleClose}
+        PaperProps={{
+          sx: { width: { xs: "100%", sm: 600 } },
+        }}
+      >
+        <div
+          className="h-full w-full flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-5 py-4 border-b">
+            <h2 className="text-lg font-medium text-gray-900">
+              {editingItem ? "Edit Recipe" : "Add Recipe"}
+            </h2>
+          </div>
+          <form
+            onSubmit={formik.handleSubmit}
+            className="flex flex-col flex-1 overflow-hidden"
           >
-            <div className="px-5 py-4 border-b">
-              <h2 className="text-lg font-medium text-gray-900">
-                {editingItem ? "Edit Recipe" : "Add Recipe"}
-              </h2>
-            </div>
-            <form
-              onSubmit={formik.handleSubmit}
-              className="flex flex-col flex-1 overflow-hidden"
-            >
-              <FormikProvider value={formik}>
-                <div className="px-5 py-4 space-y-4 flex-1 overflow-y-auto">
-                  <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <div className="px-4 py-2 border-b bg-gray-50">
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        Recipe Details
-                      </h3>
+            <FormikProvider value={formik}>
+              <div className="px-5 py-4 space-y-4 flex-1 overflow-y-auto">
+                <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+                  <div className="px-4 py-2 border-b bg-gray-50">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Recipe Details
+                    </h3>
+                  </div>
+                  <div className="px-4 py-4 space-y-3">
+                    <div className="grid grid-cols-1 gap-3">
+                      <TextField
+                        label="Recipe Name"
+                        name="name"
+                        value={formik.values.name}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                          formik.touched.name && formik.errors.name
+                            ? formik.errors.name
+                            : undefined
+                        }
+                        required
+                      />
+                      <TextField
+                        label="Selling Price"
+                        name="sellingPrice"
+                        type="number"
+                        value={formik.values.sellingPrice}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                          formik.touched.sellingPrice &&
+                          formik.errors.sellingPrice
+                            ? formik.errors.sellingPrice
+                            : undefined
+                        }
+                        required
+                      />
                     </div>
-                    <div className="px-4 py-4 space-y-3">
-                      <div className="grid grid-cols-1 gap-3">
-                        <TextField
-                          label="Recipe Name"
-                          name="name"
-                          value={formik.values.name}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={
-                            formik.touched.name && formik.errors.name
-                              ? formik.errors.name
-                              : undefined
-                          }
-                          required
-                        />
-                        <TextField
-                          label="Selling Price"
-                          name="sellingPrice"
-                          type="number"
-                          value={formik.values.sellingPrice}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={
-                            formik.touched.sellingPrice &&
-                            formik.errors.sellingPrice
-                              ? formik.errors.sellingPrice
-                              : undefined
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="flex flex-col space-y-1">
-                        <label className="text-sm font-medium text-gray-700 text-left">
-                          Description/Notes
-                        </label>
-                        <textarea
-                          name="description"
-                          value={formik.values.description}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          rows={3}
-                          className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
-                        />
-                      </div>
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-sm font-medium text-gray-700 text-left">
+                        Description/Notes
+                      </label>
+                      <textarea
+                        name="description"
+                        value={formik.values.description}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        rows={3}
+                        className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                      />
                     </div>
                   </div>
+                </div>
 
-                  <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <div className="px-4 py-2 border-b bg-gray-50 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900">
-                          Ingredients &amp; Costing
-                        </h3>
-                        <p className="text-xs text-gray-500">
-                          Raw Materials Required
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        fullWidth={false}
-                        className="px-3 py-1 text-xs"
-                        onClick={handleAddIngredientRow}
-                      >
-                        Add Ingredient Row
-                      </Button>
+                <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+                  <div className="px-4 py-2 border-b bg-gray-50 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        Ingredients &amp; Costing
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        Raw Materials Required
+                      </p>
                     </div>
-                    <div className="px-4 py-3">
-                      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                Ingredient Name
-                              </th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                Quantity Needed
-                              </th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                Unit
-                              </th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                Action
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {formik.values.ingredients.map((ing) => {
-                              const inventoryItem = inventoryItems.find(
-                                (inv) => inv.id === ing.inventoryId
-                              );
+                    <Button
+                      type="button"
+                      fullWidth={false}
+                      className="px-3 py-1 text-xs"
+                      onClick={handleAddIngredientRow}
+                    >
+                      Add Ingredient Row
+                    </Button>
+                  </div>
+                  <div className="px-4 py-3">
+                    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                              Ingredient Name
+                            </th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                              Quantity Needed
+                            </th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                              Unit
+                            </th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {formik.values.ingredients.map((ing) => {
+                            const inventoryItem = inventoryItems.find(
+                              (inv) => inv.id === ing.inventoryId
+                            );
 
-                              return (
-                                <tr key={ing.id}>
-                                  <td className="px-4 py-2 text-sm text-gray-900">
-                                    <select
-                                      value={ing.inventoryId}
-                                      onChange={(e) =>
-                                        handleChangeIngredientInventory(
-                                          ing.id,
-                                          e.target.value
-                                        )
-                                      }
-                                      className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
-                                    >
-                                      <option value="">
-                                        {inventoryItems.length === 0
-                                          ? "No inventory items"
-                                          : "Select ingredient"}
+                            return (
+                              <tr key={ing.id}>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  <select
+                                    value={ing.inventoryId}
+                                    onChange={(e) =>
+                                      handleChangeIngredientInventory(
+                                        ing.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                  >
+                                    <option value="">
+                                      {inventoryItems.length === 0
+                                        ? "No inventory items"
+                                        : "Select ingredient"}
+                                    </option>
+                                    {inventoryItems.map((inv) => (
+                                      <option key={inv.id} value={inv.id}>
+                                        {inv.name}
                                       </option>
-                                      {inventoryItems.map((inv) => (
-                                        <option key={inv.id} value={inv.id}>
-                                          {inv.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </td>
-                                  <td className="px-4 py-2 text-sm text-gray-900">
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      value={ing.quantityNeeded}
-                                      onChange={(e) =>
-                                        handleChangeIngredientQuantityNeeded(
-                                          ing.id,
-                                          e.target.value
-                                        )
-                                      }
-                                      className="w-28 px-3 py-2 border rounded-md bg-white text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
-                                    />
-                                  </td>
-                                  <td className="px-4 py-2 text-sm text-gray-900">
-                                    <select
-                                      value={ing.unit}
-                                      onChange={(e) =>
-                                        handleChangeIngredientUnit(
-                                          ing.id,
-                                          e.target.value as Unit
-                                        )
-                                      }
-                                      className="w-28 px-3 py-2 border rounded-md bg-white text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                    ))}
+                                  </select>
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={ing.quantityNeeded}
+                                    onChange={(e) =>
+                                      handleChangeIngredientQuantityNeeded(
+                                        ing.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-28 px-3 py-2 border rounded-md bg-white text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                  />
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  <select
+                                    value={ing.unit}
+                                    onChange={(e) =>
+                                      handleChangeIngredientUnit(
+                                        ing.id,
+                                        e.target.value as Unit
+                                      )
+                                    }
+                                    className="w-28 px-3 py-2 border rounded-md bg-white text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                  >
+                                    <option value="grams">grams</option>
+                                    <option value="kgs">kgs</option>
+                                    <option value="pounds">pounds</option>
+                                  </select>
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-900">
+                                  <button
+                                    type="button"
+                                    title="Remove"
+                                    onClick={() =>
+                                      handleRemoveIngredientRow(ing.id)
+                                    }
+                                    className="inline-flex items-center justify-center rounded-full p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                                  >
+                                    <svg
+                                      className="w-4 h-4"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                      strokeWidth="1.8"
                                     >
-                                      <option value="grams">grams</option>
-                                      <option value="kgs">kgs</option>
-                                      <option value="pounds">pounds</option>
-                                    </select>
-                                  </td>
-                                  <td className="px-4 py-2 text-sm text-gray-900">
-                                    <button
-                                      type="button"
-                                      title="Remove"
-                                      onClick={() =>
-                                        handleRemoveIngredientRow(ing.id)
-                                      }
-                                      className="inline-flex items-center justify-center rounded-full p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50"
-                                    >
-                                      <svg
-                                        className="w-4 h-4"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth="1.8"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M6 7h12M10 11v6m4-6v6M9 4h6a1 1 0 0 1 1 1v2H8V5a1 1 0 0 1 1-1Zm-1 4h8l-.6 11.2A1 1 0 0 1 14.4 20H9.6a1 1 0 0 1-.998-.8L8 8Z"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                            {formik.values.ingredients.length === 0 && (
-                              <tr>
-                                <td
-                                  className="px-4 py-4 text-sm text-gray-500 text-center"
-                                  colSpan={4}
-                                >
-                                  No ingredients added yet.
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M6 7h12M10 11v6m4-6v6M9 4h6a1 1 0 0 1 1 1v2H8V5a1 1 0 0 1 1-1Zm-1 4h8l-.6 11.2A1 1 0 0 1 14.4 20H9.6a1 1 0 0 1-.998-.8L8 8Z"
+                                      />
+                                    </svg>
+                                  </button>
                                 </td>
                               </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
+                            );
+                          })}
+                          {formik.values.ingredients.length === 0 && (
+                            <tr>
+                              <td
+                                className="px-4 py-4 text-sm text-gray-500 text-center"
+                                colSpan={4}
+                              >
+                                No ingredients added yet.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
-                <div className="px-5 py-3 border-t flex items-center justify-end space-x-2">
-                  <Button
-                    type="button"
-                    fullWidth={false}
-                    className="px-3 py-1 text-sm"
-                    onClick={handleClose}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm">
-                    {editingItem ? "Save Changes" : "Add"}
-                  </Button>
-                </div>
-              </FormikProvider>
-            </form>
-          </div>
+              </div>
+              <div className="px-5 py-3 border-t flex items-center justify-end space-x-2">
+                <Button
+                  type="button"
+                  fullWidth={false}
+                  className="px-3 py-1 text-sm"
+                  onClick={handleClose}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm">
+                  {editingItem ? "Save Changes" : "Add"}
+                </Button>
+              </div>
+            </FormikProvider>
+          </form>
         </div>
-      )}
+      </Drawer>
     </div>
   );
 };
