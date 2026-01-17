@@ -21,7 +21,10 @@ type OrderFormValues = {
 const Orders = () => {
   const dispatch = useDispatch<AppDispatch>();
   const items = useSelector((state: RootState) => state.orders.items);
-   const recipes = useSelector((state: RootState) => state.recipes.items);
+  const recipes = useSelector((state: RootState) => state.recipes.items);
+  const [statusFilter, setStatusFilter] = useState<OrderItem["status"] | "">("");
+  const [customerFilter, setCustomerFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [editingItem, setEditingItem] = useState<OrderItem | null>(null);
@@ -98,6 +101,22 @@ const Orders = () => {
     toast.success("Order deleted");
   };
 
+  const filteredItems = items.filter((item) => {
+    if (statusFilter && item.status !== statusFilter) {
+      return false;
+    }
+    if (
+      customerFilter &&
+      !item.customerName.toLowerCase().includes(customerFilter.toLowerCase())
+    ) {
+      return false;
+    }
+    if (dateFilter && item.orderDate !== dateFilter) {
+      return false;
+    }
+    return true;
+  });
+
   const columns: ColumnDef<OrderItem, unknown>[] = [
     { header: "Customer Name", accessorKey: "customerName" },
     {
@@ -109,7 +128,24 @@ const Orders = () => {
       },
     },
     { header: "Order Date", accessorKey: "orderDate" },
-    { header: "Status", accessorKey: "status" },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: ({ row }) => {
+        const value = row.original.status;
+        const baseClasses =
+          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium";
+        let colorClasses = "";
+        if (value === "Pending") {
+          colorClasses = "bg-yellow-100 text-yellow-800";
+        } else if (value === "Cancelled") {
+          colorClasses = "bg-red-100 text-red-800";
+        } else if (value === "Completed") {
+          colorClasses = "bg-green-100 text-green-800";
+        }
+        return <span className={`${baseClasses} ${colorClasses}`}>{value}</span>;
+      },
+    },
     { header: "Total Amount", accessorKey: "totalAmount" },
     {
       header: "Actions",
@@ -182,7 +218,56 @@ const Orders = () => {
           Add New Order
         </Button>
       </div>
-      <DataTable columns={columns} data={items} />
+
+      <div className="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="px-4 py-2 border-b bg-gray-50">
+          <h3 className="text-sm font-semibold text-gray-900">Filters</h3>
+        </div>
+        <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <TextField
+            label="Customer Name"
+            name="customerFilter"
+            value={customerFilter}
+            onChange={(e) => setCustomerFilter(e.target.value)}
+            placeholder="Filter by customer name"
+            containerClassName="w-full"
+          />
+          <div className="flex flex-col space-y-1">
+            <label className="text-sm font-medium text-gray-700 text-left">
+              Order Date
+            </label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+            />
+          </div>
+          <div className="flex flex-col space-y-1">
+            <label className="text-sm font-medium text-gray-700 text-left">
+              Status
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(
+                  e.target.value === "" ? "" : (e.target.value as OrderItem["status"])
+                )
+              }
+              className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+            >
+              <option value="">All</option>
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4 border-t border-gray-200" />
+
+      <DataTable columns={columns} data={filteredItems} />
 
       {mounted && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center ${open ? "opacity-100" : "opacity-0"} transition-opacity duration-200 ease-out`}>
