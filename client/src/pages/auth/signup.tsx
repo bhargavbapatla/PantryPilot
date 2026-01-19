@@ -2,6 +2,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link } from "react-router-dom";
 import TextField from "../../components/TextField";
+import Button from "../../components/Button";
 
 const Signup = () => {
   const formik = useFormik({
@@ -89,12 +90,12 @@ const Signup = () => {
         />
 
         <div className="flex justify-center">
-          <button
+          <Button
             type="submit"
-            className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            // className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             Create Account
-          </button>
+          </Button>
         </div>
       </form>
     </div>
