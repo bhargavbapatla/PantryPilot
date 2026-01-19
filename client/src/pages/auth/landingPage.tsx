@@ -4,6 +4,8 @@ import { useAuth } from "../../features/auth/authContext";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText"; // or "gsap-trial/SplitText"
+import { Button } from "@mui/material";
+import { testingDataGet } from "../../api/users";
 
 gsap.registerPlugin(ScrollTrigger);
 gsap.registerPlugin(SplitText);
@@ -101,12 +103,24 @@ const Landing = () => {
     };
   }, []);
 
+  const callSampleApi = async () => {
+    const data = await testingDataGet();
+    console.log("callSampleApi", data);
+  }
+
 
   return (
     <div
       className="min-h-screen"
       style={{ backgroundColor: theme.background, color: theme.text }}
     >
+      <Button
+        variant="contained"
+        style={{ backgroundColor: theme.primary, color: theme.primaryText }}
+        onClick={() => callSampleApi()}
+      >
+        Test API
+      </Button>
       <header
         className="sticky top-0 z-20"
         style={{ backgroundColor: theme.background }}
