@@ -1,10 +1,19 @@
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import TextField from "../../components/TextField";
 import Button from "../../components/Button";
+import { userSignup } from "../../api/auth";
+import toast from "react-hot-toast";
+import { useAuth } from "../../features/auth/authContext";
+import Loader from "../../components/Loader";
+import { useState } from "react";
 
 const Signup = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -24,11 +33,49 @@ const Signup = () => {
         .oneOf([Yup.ref("password"), undefined], "Passwords must match")
         .required("Confirm Password is required"),
     }),
-    onSubmit: (values) => {
-      // handle signup with values
+    onSubmit: async (values) => {
+      setLoading(true);
+      try {
+        const { status, data } = await userSignup(values);
+        console.log("Signup response:", status);
+        if (status === 200 || status === 201) {
+          console.log("Signup successful:", data);
+          toast.success("Signup successful!");
+          
+          // Assuming data contains user and token. 
+          // If structure is different, this might need adjustment.
+          // Based on typical auth flows:
+          const user = data.user || { name: values.name, email: values.email, id: data.id || "temp-id", role: "user" }; 
+          const token = data.token || data.accessToken || "mock-token-if-missing";
+
+          // Save to AuthContext (and localStorage)
+          // This keeps it in the same object as the login (AuthContext)
+          login(user, token);
+
+          navigate("/");
+        } else {
+          console.error("Signup failed:", data);
+          toast.error(data.message || "Signup failed. Please try again.");
+        }
+      } catch (error: any) {
+        console.error("Signup error:", error);
+        const errorMessage = error.response?.data?.message || "An error occurred during signup.";
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+      
       console.log("Signup values:", values);
     },
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-8 rounded shadow-md w-96">
@@ -60,7 +107,7 @@ const Signup = () => {
           placeholder="you@example.com"
           error={formik.touched.email && formik.errors.email ? formik.errors.email : undefined}
           required
-          // Leading icon is automatically applied for type=\"email\"
+        // Leading icon is automatically applied for type=\"email\"
         />
         <TextField
           label="Password"
@@ -92,7 +139,7 @@ const Signup = () => {
         <div className="flex justify-center">
           <Button
             type="submit"
-            // className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          // className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             Create Account
           </Button>

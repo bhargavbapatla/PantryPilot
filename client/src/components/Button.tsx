@@ -50,6 +50,7 @@ const Button = ({
         backgroundColor,
         color,
         border,
+        ...props.style,
       }}
     >
       {loading ? "Loading..." : children}
