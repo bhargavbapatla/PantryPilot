@@ -130,13 +130,13 @@ const Login = () => {
           className="pt-2 text-sm text-center"
           style={{ color: theme.textMuted }}
         >
-          dont have an account ?{' '}
+          Don't have an account?{' '}
           <Link
             to="/signup"
             className="hover:underline"
             style={{ color: theme.primary }}
           >
-            sign up
+            Sign up
           </Link>
         </p>
       </form>
