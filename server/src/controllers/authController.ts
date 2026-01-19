@@ -33,6 +33,7 @@ const register = async (req: Request, res: Response) => {
 
     return res.status(200).json({
         message: 'User registered successfully',
+        status: 200,
         user,
     })
 }
@@ -49,6 +50,7 @@ const login = async (req: Request, res: Response) => {
     if(!user){
         return res.status(400).json({
             message: 'User not found with this email',
+            status: 400,
         })
     }
 
@@ -57,6 +59,7 @@ const login = async (req: Request, res: Response) => {
     if(!passwordMatch){
         return res.status(400).json({
             message: 'Invalid email or password',
+            status: 400,
         })
     }
 
@@ -64,11 +67,12 @@ const login = async (req: Request, res: Response) => {
 
     return res.status(200).json({
         message: 'User logged in successfully',
-        token,
+        status: 200,
         data: {
             userId: user.id,
             name: user.name,
             email: user.email,
+            token
         },
     })
 }
