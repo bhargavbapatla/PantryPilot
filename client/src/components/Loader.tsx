@@ -1,6 +1,5 @@
 export default function Loader() {
-
-   return (
+  return (
     <>
       <style>{`
         .banter-loader {
@@ -25,7 +24,7 @@ export default function Loader() {
           content: "";
           position: absolute;
           inset: 0;
-          background: #fff;
+          background: #70000E;
         }
 
         .banter-loader__box:nth-child(3n) {
@@ -139,3 +138,4 @@ export default function Loader() {
     </>
   );
 }
+

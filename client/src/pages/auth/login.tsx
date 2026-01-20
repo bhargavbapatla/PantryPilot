@@ -2,13 +2,20 @@ import { Field, FormikProvider, useFormik } from 'formik';
 import * as Yup from 'yup';
 import TextField from '../../components/TextField';
 import Button from '../../components/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../features/auth/authContext';
 import { useState } from 'react';
+import Loader from '../../components/Loader';
+import { googleSSOLogin, loginUser } from '../../api/auth';
+import toast from 'react-hot-toast';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const { login, theme } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -21,16 +28,66 @@ const Login = () => {
       password: Yup.string()
         .required('Password is required'),
     }),
-    onSubmit: (values) => {
-      // handle login submit with values.email and values.password
-      console.log('Login values:', values, values.email.split('@')[0]);
-      const mockUser = { id: '1', name: values.email.split('@')[0], email: values.email, role: 'user' };
-      const mockToken = 'abc-123-xyz';
+    onSubmit: async (values) => {
+      setLoading(true);
+      try {
+        // handle login submit with values.email and values.password
+        // Simulate API call delay
 
-      login(mockUser, mockToken);
+        const { data, status, message } = await loginUser(values);
+        console.log(data, status);
+        console.log("datadatadata", data)
 
+        if (status == 200) {
+          toast.success(message || 'Login successful');
+          login(data, data.token);
+          // navigate("/dashboard");
+
+        } else {
+          toast.error(message || 'Login failed');
+
+        }
+
+      } catch (error) {
+        console.error("Login error:", error);
+      } finally {
+        setLoading(false);
+      }
     },
   });
+
+  const handleSuccess = async (credentialResponse: any) => {
+    // 1. Capture the 'credential' (This is the JWT ID Token from Google)
+    const { credential } = credentialResponse;
+    setLoading(true);
+    try {
+      // 2. Send it to your backend
+      const { data, status, message } = await googleSSOLogin(credential);
+      console.log(data, status);
+      console.log("datadatadata", data)
+
+      if (status == 200) {
+        toast.success(message || 'Login successful');
+        login(data, data.token);
+        // navigate("/dashboard");
+
+      } else {
+        toast.error(message || 'Login failed');
+      }
+    } catch (error) {
+      console.error("Login Failed", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: theme.background }}>
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -65,6 +122,23 @@ const Login = () => {
       >
         Login
       </h2>
+
+      <div className="w-full space-y-4">
+        <GoogleLogin
+          onSuccess={handleSuccess}
+          onError={() => {
+            console.log('Login Failed');
+          }}
+        />
+
+        <div className="relative flex items-center justify-center">
+          <div className="w-full border-t border-gray-300"></div>
+          <span className="absolute px-3 text-sm text-gray-500" style={{ backgroundColor: theme.surface }}>
+            OR
+          </span>
+        </div>
+      </div>
+
       <form onSubmit={formik.handleSubmit} className="space-y-4">
         <FormikProvider value={formik}>
           <Field name="email" >
@@ -80,7 +154,6 @@ const Login = () => {
                 error={meta.touched && meta.error ? meta.error : undefined}
                 required
               />
-              <>{console.log('meta:', meta)}</>
             </>)}
           </Field>
 
@@ -130,13 +203,13 @@ const Login = () => {
           className="pt-2 text-sm text-center"
           style={{ color: theme.textMuted }}
         >
-          dont have an account ?{' '}
+          Don't have an account?{' '}
           <Link
             to="/signup"
             className="hover:underline"
             style={{ color: theme.primary }}
           >
-            sign up
+            Sign up
           </Link>
         </p>
       </form>
