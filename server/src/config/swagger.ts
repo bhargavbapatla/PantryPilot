@@ -10,6 +10,13 @@ const options = {
     definition: {
         openapi: '3.0.0',
         components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
             schemas: {
                 User: {
                     type: 'object',

@@ -8,6 +8,8 @@ export interface InventoryItem {
   weight: number;
   unit: Unit;
   quantity: number;
+  isLowStockAlert?: boolean;
+  lowStockThreshold?: number;
 }
 
 interface InventoryState {
