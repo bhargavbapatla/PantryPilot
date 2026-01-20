@@ -1,4 +1,4 @@
-import { authorizedAPI } from './api';
+import { unauthorizedAPI } from './api';
 import { userGoogleLogin, userLogin, userRegister } from './paths';
 
 interface AuthPayload {
@@ -10,7 +10,7 @@ interface AuthPayload {
 const userSignup = async (payload: AuthPayload) => {
     const { email, password, name } = payload;
     try {
-        const response = await authorizedAPI.post(userRegister, {
+        const response = await unauthorizedAPI.post(userRegister, {
             email,
             password,
             name
@@ -44,7 +44,7 @@ const loginUser = async (payload: AuthPayload) => {
     const { email, password } = payload;
 
     try {
-        const response = await authorizedAPI.post(userLogin, {
+        const response = await unauthorizedAPI.post(userLogin, {
             email,
             password,
         });
@@ -77,7 +77,7 @@ const loginUser = async (payload: AuthPayload) => {
 const googleSSOLogin = async (token: string) => {
     try {
         console.log("googleSSOLogin token", token);
-        const response = await authorizedAPI.post(userGoogleLogin, {
+        const response = await unauthorizedAPI.post(userGoogleLogin, {
             googleToken: token,
         });
 
