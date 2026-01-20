@@ -36,11 +36,11 @@ const Signup = () => {
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        const { status, data } = await userSignup(values);
+        const { status, data, message } = await userSignup(values);
         console.log("Signup response:", status);
         if (status === 200 || status === 201) {
           console.log("Signup successful:", data);
-          toast.success("Signup successful!");
+          toast.success(message || "Signup successful!");
           
           // Assuming data contains user and token. 
           // If structure is different, this might need adjustment.
@@ -55,7 +55,7 @@ const Signup = () => {
           navigate("/");
         } else {
           console.error("Signup failed:", data);
-          toast.error(data.message || "Signup failed. Please try again.");
+          toast.error(message || "Signup failed. Please try again.");
         }
       } catch (error: any) {
         console.error("Signup error:", error);
