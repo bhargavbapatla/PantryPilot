@@ -3,6 +3,7 @@ import cors from 'cors';
 import userRouter from './routes/user.ts';
 import authRouter from './routes/authRouters.ts';
 import dashboardRouter from './routes/dashboardRoutes.ts';
+import inventoryRouter from './routes/inventoryRoutes.ts';
 import {config} from 'dotenv';
 import {connectDB, disconnectDB} from './config/db.ts';
 import swaggerUi from 'swagger-ui-express';
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/auth', authRouter);
+app.use('/inventory', inventoryRouter);
 app.use('/dashboard', dashboardRouter);
 
 app.get('/', (req, res) => {

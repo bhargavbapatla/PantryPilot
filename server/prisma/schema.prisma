@@ -21,11 +21,19 @@ model User {
   createdAt DateTime @default(now())
 }
 
+enum Unit {
+  GRAMS
+  KGS
+  POUNDS
+  LITERS // Optional: Good to add now if you use milk/oil later
+  PIECES // Optional: For things like eggs
+}
+
 model Inventory {
   id                String       @id @default(uuid())
   name              String
   weight            Float
-  unit              String
+  unit              Unit
   isLowStockAlert   Boolean?     @default(false)
   lowStockThreshold Int?
   expiryDate        DateTime?
