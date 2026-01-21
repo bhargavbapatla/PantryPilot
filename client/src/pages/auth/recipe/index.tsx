@@ -561,6 +561,8 @@ const Recipes = () => {
                                     <option value="grams">grams</option>
                                     <option value="kgs">kgs</option>
                                     <option value="pounds">pounds</option>
+                                    <option value="liters">liters</option>
+                                    <option value="pieces">pieces</option>
                                   </select>
                                 </td>
                                 <td className="px-4 py-2 text-sm">
