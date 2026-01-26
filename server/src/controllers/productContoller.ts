@@ -31,22 +31,32 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
 export const getProductById = async (req: Request, res: Response) => {
     const { id } = req.params;
+
     const product = await prisma.product.findUnique({
         where: {
             id,
+        },
+        include: {
+            ingredients: {
+                include: {
+                    inventory: true
+                }
+            }
         }
-    })
+    });
+
     if (!product) {
-        return res.status(400).json({
+        return res.status(404).json({
             message: 'Product not found',
-            status: 400,
-        })
+            status: 404,
+        });
     }
+
     return res.status(200).json({
         message: 'Product fetched successfully',
         status: 200,
-        product,
-    })
+        data: product,
+    });
 }
 
 
@@ -98,7 +108,8 @@ export const createProduct = async (req: Request, res: Response) => {
                 ingredients: {
                     create: ingredients.map((i: any) => ({
                         inventoryId: i.inventoryId,
-                        quantity: i.quantityNeeded
+                        quantity: i.quantityNeeded,
+                        unit: i.unit,
                     }))
                 }
             },
@@ -139,13 +150,17 @@ export const updateProduct = async (req: Request, res: Response) => {
                     if (inventoryItem) {
                         const totalWeightInGrams = (inventoryItem.quantity || 0) * getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
                         const pricePerGram = totalWeightInGrams > 0 ? (inventoryItem.price || 0) / totalWeightInGrams : 0;
-                        totalIngredientsCost += pricePerGram * (item.quantity || 0);
+                        totalIngredientsCost += pricePerGram * (item.quantityNeeded || 0);
                     }
                 }
             }
         }
 
         const totalCostPrice = totalIngredientsCost + (makingCharge || 0);
+
+        console.log("Total Ingredients Cost:", totalIngredientsCost);
+        console.log("Total Cost Price:", totalCostPrice.toFixed(2));
+        console.log("ingredients:", ingredients);
 
         const product = await prisma.product.update({
             where: {
@@ -160,7 +175,8 @@ export const updateProduct = async (req: Request, res: Response) => {
                     deleteMany: {}, // Remove existing ingredients
                     create: ingredients.map((i: any) => ({ // Add new ingredients
                         inventoryId: i.inventoryId,
-                        quantity: i.quantity
+                        quantity: i.quantityNeeded,
+                        unit: i.unit,
                     }))
                 }
             },
@@ -171,7 +187,7 @@ export const updateProduct = async (req: Request, res: Response) => {
         return res.status(200).json({
             message: 'Product updated successfully',
             status: 200,
-            product,
+            data: product,
         })
     } catch (error) {
         console.error("Error updating product:", error);
@@ -193,6 +209,6 @@ export const deleteProduct = async (req: Request, res: Response) => {
     return res.status(200).json({
         message: 'Product deleted successfully',
         status: 200,
-        product,
+        data: product,
     })
 }

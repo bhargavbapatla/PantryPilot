@@ -301,9 +301,9 @@ const DashboardLayout = () => {
         >
           <Toolbar />
           <Box sx={{ px: 1, py: 1 }}>
-            {!isCollapsed && (
+            {/* {!isCollapsed && (
               <Typography variant="subtitle1" sx={{ px: 2, py: 1, fontWeight: 700 }}>Inventory App</Typography>
-            )}
+            )} */}
             <List>
               {menuItems.map((item) => (
                 <Tooltip key={item.to} title={isCollapsed ? item.label : ''} placement="right">
