@@ -59,11 +59,12 @@ model Product {
 
 model Ingredient {
   id          String    @id @default(uuid())
-  product     Product   @relation(fields: [productId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId   String
   inventory   Inventory @relation(fields: [inventoryId], references: [id])
   inventoryId String
   quantity    Int
+  unit        Unit?
 
   @@unique([productId, inventoryId])
 }

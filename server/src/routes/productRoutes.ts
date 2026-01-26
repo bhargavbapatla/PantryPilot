@@ -1,6 +1,6 @@
 import express from 'express';
 import { authMiddleware } from '../middleware/authMiddleware.ts';
-import { createProduct, getAllProducts, updateProduct, deleteProduct } from '../controllers/productContoller.ts';       
+import { createProduct, getAllProducts, updateProduct, deleteProduct, getProductById } from '../controllers/productContoller.ts';       
 
 const router = express.Router();
 
@@ -115,11 +115,37 @@ const router = express.Router();
  *         description: Server error
  */
 router.get('/', authMiddleware, getAllProducts);
+router.get('/:id', authMiddleware, getProductById);
 router.post('/', authMiddleware, createProduct);
 
 /**
  * @swagger
  * /products/{id}:
+ *   get:
+ *     summary: Get a product by id
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The product id
+ *     responses:
+ *       200:
+ *         description: The product description
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: The product was not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
  *   put:
  *     summary: Update a product by id
  *     tags: [Products]
@@ -160,12 +186,6 @@ router.post('/', authMiddleware, createProduct);
  *         description: Unauthorized
  *       500:
  *         description: Server error
- */
-router.put('/:id', authMiddleware, updateProduct);
-
-/**
- * @swagger
- * /products/{id}:
  *   delete:
  *     summary: Remove a product by id
  *     tags: [Products]
@@ -188,6 +208,8 @@ router.put('/:id', authMiddleware, updateProduct);
  *       500:
  *         description: Server error
  */
+router.get('/:id', authMiddleware, getProductById);
+router.put('/:id', authMiddleware, updateProduct);
 router.delete('/:id', authMiddleware, deleteProduct);
 
 export default router

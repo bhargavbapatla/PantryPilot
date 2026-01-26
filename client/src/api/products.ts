@@ -27,6 +27,26 @@ export const getProducts = async () => {
     }
 }
 
+export const getProductById = async (id: string) => {
+    try {
+        const response = await authorizedAPI.get(`${Product}/${id}`);
+        return { data: response.data.data, status: response.status, message: response.data.message || 'Product fetched successfully' };
+    } catch (error: any) {
+        if (error.response) {
+            console.log("Error response data:", error.response.data);
+            console.log("Error status:", error.response.status);
+
+            return {
+                success: false,
+                message: error.response.data.message,
+                status: error.response.status
+            };
+        } else {
+            console.error("Network Error:", error.message);
+            return { success: false, status: 500, message: "Network Error" };
+        }
+    }
+}
 export const postProductData = async (product: ProductItem) => {
     try {
         const response = await authorizedAPI.post(Product, product);
@@ -51,7 +71,7 @@ export const postProductData = async (product: ProductItem) => {
 export const updateProductsbyId = async (product: ProductItem, id: string) => {
     try {
         const response = await authorizedAPI.put(`${Product}/${id}`, product);
-        return { data: response.data, status: response.status, message: response.data.message || 'Product updated successfully' };
+        return { data: response.data.data, status: response.status, message: response.data.message || 'Product updated successfully' };
     } catch (error: any) {
         if (error.response) {
             console.log("Error response data:", error.response.data);
