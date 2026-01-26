@@ -36,6 +36,7 @@ model Inventory {
   unit              Unit
   isLowStockAlert   Boolean?     @default(false)
   lowStockThreshold Int?
+  lowStockThresholdUnit Unit?
   expiryDate        DateTime?
   expiresInDays     Int?
   expiryAlert       Boolean?     @default(false)
@@ -48,11 +49,12 @@ model Inventory {
 model Product {
   id          String       @id @default(uuid())
   name        String
-  sellPrice   Float
+  makingCharge   Float
   description String?
   ingredients Ingredient[]
   createdAt   DateTime     @default(now())
   orderItems  OrderItem[]
+  totalCostPrice Float
 }
 
 model Ingredient {

@@ -13,6 +13,7 @@ export interface InventoryItem {
   price?: number;
   isLowStockAlert?: boolean;
   lowStockThreshold?: number;
+  lowStockThresholdUnit?: Unit;
   isExpiryAlert?: boolean;
   expiryValue?: number;
   expiryUnit?: ExpiryUnit;
