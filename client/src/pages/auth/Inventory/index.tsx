@@ -14,6 +14,17 @@ import { deleteInventory, editInventory, getInventory, postInventory } from "../
 import Loader from "../../../components/Loader";
 
 
+const convertToGrams = (weight: number, unit: string) => {
+  const map: Record<string, number> = {
+    GRAMS: 1,
+    KGS: 1000,
+    POUNDS: 453.592,
+    LITERS: 1000,
+    PIECES: 1,
+  };
+  return weight * (map[unit] || 1);
+};
+
 const Inventory = () => {
   const { theme } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
@@ -47,6 +58,7 @@ const Inventory = () => {
       price: editingItem?.price ? String(editingItem.price) : "",
       isLowStockAlert: editingItem?.isLowStockAlert ?? false,
       lowStockThreshold: editingItem?.lowStockThreshold ? String(editingItem.lowStockThreshold) : "",
+      lowStockThresholdUnit: editingItem?.lowStockThresholdUnit ?? "GRAMS",
       isExpiryAlert: editingItem?.isExpiryAlert ?? false,
       expiryValue: editingItem?.expiryValue ? String(editingItem.expiryValue) : "",
       expiryUnit: editingItem?.expiryUnit ?? "days",
@@ -60,7 +72,28 @@ const Inventory = () => {
       isLowStockAlert: Yup.boolean(),
       lowStockThreshold: Yup.number().when("isLowStockAlert", {
         is: true,
-        then: (schema) => schema.typeError("Enter a number").min(0, "Must be positive").required("Threshold is required"),
+        then: (schema) => schema
+          .typeError("Enter a number")
+          .min(0, "Must be positive")
+          .required("Threshold is required")
+          .test(
+            "max-weight",
+            "Threshold cannot exceed total inventory weight",
+            function (value) {
+              const { weight, unit, quantity, lowStockThresholdUnit } = this.parent as any;
+              if (!value || !weight || !unit || !quantity || !lowStockThresholdUnit) return true;
+              
+              const totalWeightInGrams = convertToGrams(Number(weight), unit) * Number(quantity);
+              const thresholdInGrams = convertToGrams(Number(value), lowStockThresholdUnit);
+              
+              return thresholdInGrams <= totalWeightInGrams;
+            }
+          ),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      lowStockThresholdUnit: Yup.string().when("isLowStockAlert", {
+        is: true,
+        then: (schema) => schema.required("Unit is required"),
         otherwise: (schema) => schema.notRequired(),
       }),
       isExpiryAlert: Yup.boolean(),
@@ -85,6 +118,7 @@ const Inventory = () => {
         price: Number(values.price),
         isLowStockAlert: values.isLowStockAlert,
         lowStockThreshold: values.isLowStockAlert ? Number(values.lowStockThreshold) : undefined,
+        lowStockThresholdUnit: values.isLowStockAlert ? values.lowStockThresholdUnit as InventoryItem["unit"] : undefined,
         isExpiryAlert: values.isExpiryAlert,
         expiryValue: values.isExpiryAlert ? Number(values.expiryValue) : undefined,
         expiryUnit: values.isExpiryAlert ? values.expiryUnit as InventoryItem["expiryUnit"] : undefined,
@@ -156,11 +190,12 @@ const Inventory = () => {
         const item = row.original;
         return (
           <div className="flex items-center space-x-2">
-            <button
+            <Button
               type="button"
               title="Edit"
               onClick={() => handleEdit(item)}
-              className="inline-flex items-center justify-center rounded-full p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+              className="inline-flex items-center justify-center rounded-full p-1.5 hover:bg-blue-50"
+              style={{ color: theme.text }}
             >
               <svg
                 className="w-4 h-4"
@@ -176,12 +211,13 @@ const Inventory = () => {
                   d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L8.25 19.04 4 20l.96-4.25 11.902-11.263Z"
                 />
               </svg>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               title="Delete"
               onClick={() => handleDelete(item.id)}
-              className="inline-flex items-center justify-center rounded-full p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50"
+              className="inline-flex items-center justify-center rounded-full p-1.5 hover:bg-red-50"
+              style={{ color: theme.text }}
             >
               <svg
                 className="w-4 h-4"
@@ -197,7 +233,7 @@ const Inventory = () => {
                   d="M6 7h12M10 11v6m4-6v6M9 4h6a1 1 0 0 1 1 1v2H8V5a1 1 0 0 1 1-1Zm-1 4h8l-.6 11.2A1 1 0 0 1 14.4 20H9.6a1 1 0 0 1-.998-.8L8 8Z"
                 />
               </svg>
-            </button>
+            </Button>
           </div>
         );
       },
@@ -244,7 +280,7 @@ const Inventory = () => {
       }}
     >
       {loading && !open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
           <Loader />
         </div>
       )}
@@ -436,20 +472,48 @@ const Inventory = () => {
                   </Field>
 
                   {formik.values.isLowStockAlert && (
-                    <Field name="lowStockThreshold">
-                      {({ field, meta }) => (
-                        <TextField
-                          label="Low Stock Threshold"
-                          name="lowStockThreshold"
-                          type="number"
-                          value={field.value as string}
-                          onChange={field.onChange}
-                          onBlur={field.onBlur}
-                          error={meta.touched && meta.error ? meta.error : undefined}
-                          required
-                        />
-                      )}
-                    </Field>
+                    <div className="flex space-x-2">
+                      <div className="flex-1">
+                        <Field name="lowStockThreshold">
+                          {({ field, meta }) => (
+                            <TextField
+                              label="Low Stock Threshold"
+                              name="lowStockThreshold"
+                              type="number"
+                              value={field.value as string}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              error={meta.touched && meta.error ? meta.error : undefined}
+                              required
+                            />
+                          )}
+                        </Field>
+                      </div>
+                      <div className="w-1/3">
+                        <Field name="lowStockThresholdUnit">
+                          {({ field, meta }) => (
+                            <div className="flex flex-col space-y-1">
+                              <label className="text-sm font-medium text-left invisible">Unit</label>
+                              <select
+                                {...field}
+                                className="w-full px-3 py-2 border rounded-md text-left text-sm outline-none h-[38px]"
+                                style={{
+                                  backgroundColor: theme.surfaceAlt,
+                                  color: theme.text,
+                                  borderColor: theme.border,
+                                }}
+                              >
+                                <option value="GRAMS">grams</option>
+                                <option value="KGS">kgs</option>
+                                <option value="POUNDS">pounds</option>
+                                <option value="LITERS">liters</option>
+                                <option value="PIECES">pieces</option>
+                              </select>
+                            </div>
+                          )}
+                        </Field>
+                      </div>
+                    </div>
                   )}
 
                   <Field name="isExpiryAlert">

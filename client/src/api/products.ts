@@ -1,13 +1,14 @@
-import type { InventoryItem } from '../store/slices/inventorySlice';
 import { authorizedAPI } from './api';
+import { Product } from './paths';
+import type { RecipeItem } from '../store/slices/recipesSlice';
 
-import { Inventory } from './paths';
+// Assuming Product maps to RecipeItem based on context
+type ProductItem = RecipeItem;
 
-
-export const getInventory = async () => {
+export const getProducts = async () => {
     try {
-        const response = await authorizedAPI.get(Inventory);
-        return { data: response.data.data, status: response.status, message: response.data.message || 'Inventory fetched successfully' };
+        const response = await authorizedAPI.get(Product);
+        return { data: response.data.data, status: response.status, message: response.data.message || 'Products fetched successfully' };
 
     } catch (error: any) {
         if (error.response) {
@@ -26,10 +27,10 @@ export const getInventory = async () => {
     }
 }
 
-export const postInventory = async (inventory: InventoryItem) => {
+export const postProductData = async (product: ProductItem) => {
     try {
-        const response = await authorizedAPI.post(Inventory, inventory);
-        return { data: response.data.data, status: response.status, message: response.data.message || 'Inventory posted successfully' };
+        const response = await authorizedAPI.post(Product, product);
+        return { data: response.data.data, status: response.status, message: response.data.message || 'Product posted successfully' };
     } catch (error: any) {
         if (error.response) {
             console.log("Error response data:", error.response.data);
@@ -47,10 +48,10 @@ export const postInventory = async (inventory: InventoryItem) => {
     }
 }
 
-export const editInventory = async (inventory: InventoryItem, id: string) => {
+export const updateProductsbyId = async (product: ProductItem, id: string) => {
     try {
-        const response = await authorizedAPI.put(`${Inventory}/${id}`, inventory);
-        return { data: response.data, status: response.status, message: response.data.message || 'Inventory edited successfully' };
+        const response = await authorizedAPI.put(`${Product}/${id}`, product);
+        return { data: response.data, status: response.status, message: response.data.message || 'Product updated successfully' };
     } catch (error: any) {
         if (error.response) {
             console.log("Error response data:", error.response.data);
@@ -68,10 +69,10 @@ export const editInventory = async (inventory: InventoryItem, id: string) => {
     }
 }
 
-export const deleteInventory = async (id: string) => {
+export const deleteProductById = async (id: string) => {
     try {
-        const response = await authorizedAPI.delete(`${Inventory}/${id}`);
-        return { data: response.data, status: response.status, message: response.data.message || 'Inventory deleted successfully' };
+        const response = await authorizedAPI.delete(`${Product}/${id}`);
+        return { data: response.data, status: response.status, message: response.data.message || 'Product deleted successfully' };
     } catch (error: any) {
         if (error.response) {
             console.log("Error response data:", error.response.data);

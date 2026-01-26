@@ -6,12 +6,13 @@ export interface RecipeIngredient {
   inventoryId: string | null;
   quantityNeeded: number;
   unit: Unit;
+  price: number;
 }
 
 export interface RecipeItem {
-  id: string;
+  id?: string;
   name: string;
-  sellingPrice: number;
+  makingCharge: number;
   description: string;
   ingredients: RecipeIngredient[];
 }
@@ -41,9 +42,12 @@ const recipesSlice = createSlice({
     deleteRecipe: (state, action: PayloadAction<string>) => {
       state.items = state.items.filter((item) => item.id !== action.payload);
     },
+    setRecipes: (state, action: PayloadAction<RecipeItem[]>) => {
+      state.items = action.payload;
+    },
   },
 });
 
-export const { addRecipe, updateRecipe, deleteRecipe } = recipesSlice.actions;
+export const { addRecipe, updateRecipe, deleteRecipe, setRecipes } = recipesSlice.actions;
 export default recipesSlice.reducer;
 
