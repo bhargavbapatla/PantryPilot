@@ -274,7 +274,6 @@ const Inventory = () => {
     <div
       className="p-2"
       style={{
-        backgroundColor: theme.background,
         color: theme.text,
         fontFamily: theme.fontFamily,
       }}
