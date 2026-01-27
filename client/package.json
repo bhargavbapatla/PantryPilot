@@ -23,6 +23,7 @@
     "echarts": "^6.0.0",
     "formik": "^2.4.9",
     "gsap": "^3.14.2",
+    "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",

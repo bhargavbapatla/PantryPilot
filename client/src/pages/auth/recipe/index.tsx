@@ -431,7 +431,7 @@ const Recipes = () => {
             <Loader />
           </div>
         )}
-        <DataTable columns={columns} data={items} />
+        <DataTable columns={columns} data={items} isLoading={loading} />
       </div>
 
       <ConfirmationModal
