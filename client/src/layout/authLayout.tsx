@@ -20,7 +20,7 @@ const AuthLayout = () => {
                     </div>
 
                     {/* 5. FOOTER: Simple copyright or links */}
-                    <div className="mt-6 text-center text-xs text-gray-400">
+                    <div className="mt-6 text-center text-sm text-gray-400">
                         &copy; {new Date().getFullYear()} Mom's Bakery Inc.
                     </div>
 

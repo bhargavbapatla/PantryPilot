@@ -48,7 +48,7 @@ function DataTable<TData>({ columns, data, pageSize = 10, className }: DataTable
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider select-none cursor-pointer"
+                    className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider select-none cursor-pointer"
                   >
                     {header.isPlaceholder
                       ? null

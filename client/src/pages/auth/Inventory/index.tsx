@@ -82,10 +82,10 @@ const Inventory = () => {
             function (value) {
               const { weight, unit, quantity, lowStockThresholdUnit } = this.parent as any;
               if (!value || !weight || !unit || !quantity || !lowStockThresholdUnit) return true;
-              
+
               const totalWeightInGrams = convertToGrams(Number(weight), unit) * Number(quantity);
               const thresholdInGrams = convertToGrams(Number(value), lowStockThresholdUnit);
-              
+
               return thresholdInGrams <= totalWeightInGrams;
             }
           ),
@@ -125,10 +125,10 @@ const Inventory = () => {
       };
 
       if (editingItem) {
-        if(editingItem.id){
+        if (editingItem.id) {
           setLoading(true);
           const { status, data, message } = await editInventory(payload, editingItem.id);
-          
+
           if (status == 200) {
             dispatch(
               updateItem({
@@ -146,7 +146,7 @@ const Inventory = () => {
         }
       } else {
         const { status, data, message } = await postInventory(payload);
-        console.log("postInventory",status, data, message);
+        console.log("postInventory", status, data, message);
         if (status == 200) {
           dispatch(addItem(data));
           toast.success(message || "Item added");
@@ -160,7 +160,7 @@ const Inventory = () => {
     },
   });
 
-  const handleEdit = async(item: InventoryItem) => {
+  const handleEdit = async (item: InventoryItem) => {
     setEditingItem(item);
     handleOpen();
   };
@@ -189,10 +189,11 @@ const Inventory = () => {
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-xs-1">
             <Button
               type="button"
               title="Edit"
+              variant="ghost"
               onClick={() => handleEdit(item)}
               className="inline-flex items-center justify-center rounded-full p-1.5 hover:bg-blue-50"
               style={{ color: theme.text }}
@@ -215,23 +216,25 @@ const Inventory = () => {
             <Button
               type="button"
               title="Delete"
+              variant="ghost"
               onClick={() => handleDelete(item.id)}
-              className="inline-flex items-center justify-center rounded-full p-1.5 hover:bg-red-50"
-              style={{ color: theme.text }}
+              className="rounded-md p-1 text-red-600/70 hover:text-red-600 hover:bg-red-50"
             >
               <svg
-                className="w-4 h-4"
                 xmlns="http://www.w3.org/2000/svg"
-                fill="none"
+                className="w-4 h-4"
                 viewBox="0 0 24 24"
+                fill="none"
                 stroke="currentColor"
-                strokeWidth="1.8"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 7h12M10 11v6m4-6v6M9 4h6a1 1 0 0 1 1 1v2H8V5a1 1 0 0 1 1-1Zm-1 4h8l-.6 11.2A1 1 0 0 1 14.4 20H9.6a1 1 0 0 1-.998-.8L8 8Z"
-                />
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
               </svg>
             </Button>
           </div>
@@ -241,7 +244,7 @@ const Inventory = () => {
     },
   ];
 
-  const loadInitialData = async() => {
+  const loadInitialData = async () => {
     setLoading(true);
     console.log("Loading initial data");
     const { status, data, message } = await getInventory();
@@ -392,7 +395,7 @@ const Inventory = () => {
                           <option value="PIECES">pieces</option>
                         </select>
                         {meta.touched && meta.error ? (
-                          <p className="text-xs text-red-600">{meta.error}</p>
+                          <p className="text-sm text-red-600">{meta.error}</p>
                         ) : null}
                       </div>
                     )}
@@ -460,7 +463,7 @@ const Inventory = () => {
                                 d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
                               />
                             </svg>
-                            <div className="absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100 z-50">
+                            <div className="absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-sm text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100 z-50">
                               The low stock will be calculated on total weight
                               <div className="absolute top-full left-1/2 -mt-1 h-2 w-2 -translate-x-1/2 rotate-45 bg-gray-800"></div>
                             </div>

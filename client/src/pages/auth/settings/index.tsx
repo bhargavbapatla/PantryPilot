@@ -42,7 +42,7 @@ const Settings = () => {
 
           <div className="space-y-4">
             <div className="flex flex-col space-y-1">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 Email
               </span>
               <div className="px-3 py-2 rounded-md border border-gray-200 bg-gray-50 text-sm text-gray-900">

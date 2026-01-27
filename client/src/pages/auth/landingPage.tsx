@@ -3,49 +3,31 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/authContext";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText } from "gsap/SplitText"; // or "gsap-trial/SplitText"
-import { Button } from "@mui/material";
-import { testingDataGet } from "../../api/users";
+import { SplitText } from "gsap/SplitText";
+import Button from "../../components/Button";
 
-gsap.registerPlugin(ScrollTrigger);
-gsap.registerPlugin(SplitText);
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const Landing = () => {
   const navigate = useNavigate();
   const { theme } = useAuth();
-  const headingRef = useRef(null);
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
-
+    /* HERO TEXT ANIMATION */
     if (headingRef.current) {
-      const split = new SplitText(headingRef.current, { type: "words,chars" });
+      const split = new SplitText(headingRef.current, { type: "words" });
       gsap.from(split.words, {
-        y: 50,
+        y: 40,
+        opacity: 0,
         duration: 1,
         ease: "power3.out",
-        stagger: 0.1
+        stagger: 0.08,
       });
-
-      gsap.from(split.chars, {
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.out",
-        stagger: 0.02,
-        delay: 0.1 // Slight sync delay
-      });
-      // gsap.from(split.chars, {
-      //   x: 250,
-      //   opacity: 0,
-      //   duration: 0.7,
-      //   ease: "power4",
-      //   stagger: 0.04,
-      //   // We add a slight delay so it doesn't start until the page is fully ready
-      //   delay: 0.2
-      // });
     }
 
-    const elements = gsap.utils.toArray<HTMLElement>(".fade-up");
-    elements.forEach((el) => {
+    /* FADE-UP SECTIONS */
+    gsap.utils.toArray<HTMLElement>(".fade-up").forEach((el) => {
       gsap.fromTo(
         el,
         { y: 40, opacity: 0 },
@@ -62,509 +44,322 @@ const Landing = () => {
       );
     });
 
-    const warehouse = document.querySelector<HTMLElement>(".warehouse-image");
-    const warehouseContent = document.querySelectorAll<HTMLElement>(".warehouse-content");
-    if (warehouse) {
-      gsap.fromTo(
-        warehouse,
-        { scale: 1.05, opacity: 0 },
-        {
-          scale: 1,
-          opacity: 1,
-          duration: 1,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: warehouse,
-            start: "top 75%",
-          },
-        }
-      );
-    }
-    if (warehouseContent.length) {
-      gsap.fromTo(
-        warehouseContent,
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.9,
-          stagger: 0.15,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: ".warehouse-section",
-            start: "top 80%",
-          },
-        }
-      );
-    }
+    /* HORIZONTAL WORKFLOW SCROLL */
+    const panels = gsap.utils.toArray<HTMLElement>(".workflow-panel");
+
+    gsap.to(panels, {
+      xPercent: -100 * (panels.length - 1),
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".workflow-section",
+        pin: true,
+        scrub: 1,
+        snap: 1 / (panels.length - 1),
+        end: () =>
+          "+=" +
+          (document.querySelector(".workflow-wrapper") as HTMLElement)
+            .offsetWidth,
+      },
+    });
 
     return () => {
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };
   }, []);
 
-  const callSampleApi = async () => {
-    const data = await testingDataGet();
-    console.log("callSampleApi", data);
-  }
-
-
   return (
     <div
       className="min-h-screen"
       style={{ backgroundColor: theme.background, color: theme.text }}
     >
-      <Button
-        variant="contained"
-        style={{ backgroundColor: theme.primary, color: theme.primaryText }}
-        onClick={() => callSampleApi()}
-      >
-        Test API
-      </Button>
-      <header
-        className="sticky top-0 z-20"
-        style={{ backgroundColor: theme.background }}
-      >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4" >
+      {/* HEADER */}
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-full text-xl"
-              style={{ backgroundColor: theme.surfaceAlt, color: theme.primary }}
+              style={{ backgroundColor: theme.surfaceAlt }}
             >
               🧁
             </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-base font-semibold tracking-tight">
-                PantryPilot
-              </span>
-              <span
-                className="text-xs"
-                style={{ color: theme.textMuted }}
-              >
+            <div>
+              <div className="font-semibold">PantryPilot</div>
+              <div className="text-sm" style={{ color: theme.textMuted }}>
                 Inventory Management
-              </span>
+              </div>
             </div>
           </div>
-          <nav className="hidden items-center gap-8 text-sm md:flex">
-            <label
-              className="transition-colors hover:opacity-60"
-              style={{ color: theme.text, fontWeight: 500 }}
-              onClick={() =>
-                document
-                  .getElementById("features")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Features
-            </label>
-            <label
-              className="transition-colors hover:opacity-60"
-              style={{ color: theme.text, fontWeight: 500 }}
-              onClick={() =>
-                document
-                  .getElementById("workflow")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Workflow
-            </label>
-            <label
-              className="transition-colors hover:opacity-60"
-              style={{ color: theme.text, fontWeight: 500 }}
-              onClick={() =>
-                document
-                  .getElementById("insights")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Insights
-            </label>
-          </nav>
-          <button
-            type="button"
-            onClick={() => navigate("/login")}
-            className="rounded-full px-5 py-2 text-sm font-semibold shadow-md transition hover:opacity-90"
-            style={{
-              backgroundColor: theme.primary,
-              color: theme.primaryText,
-              borderColor: theme.primary,
-            }}
-          >
+
+          <Button variant="primary" onClick={() => navigate("/login")}>
             Try for free
-          </button>
+          </Button>
         </div>
       </header>
 
+      {/* HERO */}
       <main className="mx-auto max-w-6xl px-4">
-        <section className="flex min-h-[70vh] flex-col items-center justify-center gap-10 pb-16 pt-12 md:flex-row md:justify-between">
+        <section className="flex min-h-[70vh] flex-col items-center justify-center gap-12 md:flex-row">
           <div className="fade-up max-w-xl space-y-6">
-
             <h1
               ref={headingRef}
-              className="text-balance overflow-hidden py-2 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl"
-              style={{ color: theme.text }}
+              className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl"
             >
               Stay ahead of every ingredient, order, and recipe.
             </h1>
-            <p
-              className="text-base sm:text-lg"
-              style={{ color: theme.textMuted }}
-            >
-              PantryPilot keeps your stock accurate in real time, connects
-              inventory to recipes and orders, and gives you a clear view of
-              what&apos;s happening in your kitchen.
+            <p className="text-lg" style={{ color: theme.textMuted }}>
+              PantryPilot keeps your inventory accurate in real time and your
+              kitchen running smoothly.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={() => navigate("/login")}
-                className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold shadow-lg transition hover:opacity-90"
-                style={{
-                  backgroundColor: theme.primary,
-                  color: theme.primaryText,
-                  borderColor: theme.primary,
-                }}
-              >
-                Try for free
-              </button>
-              <p
-                className="text-xs"
-                style={{ color: theme.textMuted }}
-              >
-                No credit card required. Start tracking inventory in minutes.
-              </p>
-            </div>
-          </div>
-          <div
-            className="fade-up mt-6 w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: theme.surface,
-            }}
-          >
-            <img
-              src="https://images.unsplash.com/photo-1549488344-cab7d6164423?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-              alt="Home baking ingredients and fresh pastries"
-              className="warehouse-image h-full w-full object-cover"
-            />
-          </div>
-        </section>
 
-        <section className="warehouse-section flex flex-col items-center gap-10 py-16 md:flex-row">
+            <Button
+              variant="primary"
+              className="px-6 py-3 text-base"
+              onClick={() => navigate("/login")}
+            >
+              Try for free
+            </Button>
+          </div>
+
           <div
-            className="warehouse-image w-full max-w-xl overflow-hidden rounded-2xl border shadow-2xl"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: theme.surface,
-            }}
+            className="fade-up w-full max-w-md overflow-hidden rounded-2xl border shadow-xl"
+            style={{ borderColor: theme.border }}
           >
             <img
-              src="https://images.pexels.com/photos/4483610/pexels-photo-4483610.jpeg?auto=compress&cs=tinysrgb&w=1200"
-              alt="Warehouse shelves with organized inventory"
+              src="https://images.unsplash.com/photo-1549488344-cab7d6164423?q=80&w=1200&auto=format&fit=crop"
+              alt="Home baking ingredients"
               className="h-full w-full object-cover"
-              loading="lazy"
             />
           </div>
-          <div className="w-full max-w-md space-y-4">
-            <p
-              className="warehouse-content text-xs font-semibold uppercase tracking-wide"
-              style={{ color: theme.secondary }}
-            >
-              Real-world operations
-            </p>
-            <h2
-              className="warehouse-content text-2xl font-semibold sm:text-3xl"
-              style={{ color: theme.text }}
-            >
-              See your warehouse the way your team moves through it.
-            </h2>
-            <p
-              className="warehouse-content text-sm sm:text-base"
-              style={{ color: theme.textMuted }}
-            >
-              From raw ingredients on palettes to finished goods on racks,
-              PantryPilot keeps every shelf, bin, and container in sync with
-              your digital inventory.
-            </p>
-            <ul
-              className="warehouse-content space-y-2 text-sm"
-              style={{ color: theme.text }}
-            >
-              <li>Map ingredients to locations so stock checks are fast.</li>
-              <li>Track what moves in and out of storage in real time.</li>
-              <li>Spot bottlenecks before they impact production schedules.</li>
-            </ul>
-          </div>
         </section>
 
-        <section
-          id="features"
-          className="fade-up border-y py-16"
-          style={{ borderColor: theme.border }}
-        >
-          <div className="mb-8 text-center">
-            <h2
-              className="text-2xl font-semibold sm:text-3xl"
-              style={{ color: theme.text }}
-            >
-              Built for real inventory workflows
-            </h2>
-            <p
-              className="mt-2 text-sm sm:text-base"
-              style={{ color: theme.textMuted }}
-            >
-              Everything you need to keep shelves stocked, recipes consistent,
-              and waste under control.
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div
-              className="rounded-xl border p-5"
-              style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-            >
-              <h3
-                className="text-sm font-semibold"
-                style={{ color: theme.text }}
-              >
-                Inventory tracking
-              </h3>
-              <p
-                className="mt-2 text-sm"
-                style={{ color: theme.textMuted }}
-              >
-                Track every ingredient with units, weights, and quantities so
-                you always know what is on hand.
-              </p>
-            </div>
-            <div
-              className="rounded-xl border p-5"
-              style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-            >
-              <h3
-                className="text-sm font-semibold"
-                style={{ color: theme.text }}
-              >
-                Recipes
-              </h3>
-              <p
-                className="mt-2 text-sm"
-                style={{ color: theme.textMuted }}
-              >
-                Connect recipes to inventory items and automatically calculate
-                usage per batch.
-              </p>
-            </div>
-            <div
-              className="rounded-xl border p-5"
-              style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-            >
-              <h3
-                className="text-sm font-semibold"
-                style={{ color: theme.text }}
-              >
-                Orders and costing
-              </h3>
-              <p
-                className="mt-2 text-sm"
-                style={{ color: theme.textMuted }}
-              >
-                See how each order affects stock and understand the cost of
-                every product you sell.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="workflow"
-          className="fade-up flex flex-col gap-10 py-16 md:flex-row md:items-center"
-        >
-          <div className="max-w-md space-y-4">
-            <h2
-              className="text-2xl font-semibold sm:text-3xl"
-              style={{ color: theme.text }}
-            >
-              A clear flow from purchase order to finished product.
-            </h2>
-            <p
-              className="text-sm sm:text-base"
-              style={{ color: theme.textMuted }}
-            >
-              PantryPilot mirrors how your team works so you do not have to
-              fight your tools. Keep everything flowing from receiving to
-              production to sale.
-            </p>
-          </div>
-          <ol
-            className="grid flex-1 gap-4 text-sm md:grid-cols-3"
-            style={{ color: theme.text }}
-          >
-            <li
-              className="rounded-lg border p-4"
-              style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-            >
-              <p
-                className="text-xs font-semibold uppercase tracking-wide"
-                style={{ color: theme.textMuted }}
-              >
-                Step 1
-              </p>
-              <p
-                className="mt-1 font-medium"
-                style={{ color: theme.text }}
-              >
-                Add inventory
-              </p>
-              <p
-                className="mt-1 text-xs"
-                style={{ color: theme.textMuted }}
-              >
-                Capture ingredients with units, weights, and quantities in one
-                place.
-              </p>
-            </li>
-            <li
-              className="rounded-lg border p-4"
-              style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-            >
-              <p
-                className="text-xs font-semibold uppercase tracking-wide"
-                style={{ color: theme.textMuted }}
-              >
-                Step 2
-              </p>
-              <p
-                className="mt-1 font-medium"
-                style={{ color: theme.text }}
-              >
-                Define recipes
-              </p>
-              <p
-                className="mt-1 text-xs"
-                style={{ color: theme.textMuted }}
-              >
-                Link ingredients to recipes once and let PantryPilot handle the
-                math.
-              </p>
-            </li>
-            <li
-              className="rounded-lg border p-4"
-              style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-            >
-              <p
-                className="text-xs font-semibold uppercase tracking-wide"
-                style={{ color: theme.textMuted }}
-              >
-                Step 3
-              </p>
-              <p
-                className="mt-1 font-medium"
-                style={{ color: theme.text }}
-              >
-                Track orders
-              </p>
-              <p
-                className="mt-1 text-xs"
-                style={{ color: theme.textMuted }}
-              >
-                See stock change automatically as new orders come in and are
-                fulfilled.
-              </p>
-            </li>
-          </ol>
-        </section>
-
-        <section
-          id="insights"
-          className="fade-up border-t py-16"
-          style={{ borderColor: theme.border }}
-        >
-          <div className="grid gap-8 md:grid-cols-2">
-            <div className="space-y-4">
-              <h2
-                className="text-2xl font-semibold sm:text-3xl"
-                style={{ color: theme.text }}
-              >
-                Understand your inventory at a glance.
+        {/* WORKFLOW — HORIZONTAL SCROLL */}
+        <section className="workflow-section relative h-screen overflow-hidden">
+          <div className="workflow-wrapper flex h-full">
+            {/* PANEL 1 */}
+            <div className="workflow-panel flex min-w-full flex-col justify-center px-12">
+              <img
+                src="https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg"
+                alt="Organized baking ingredients"
+                className="mb-6 h-56 w-full rounded-xl object-cover shadow-md"
+              />
+              <h2 className="text-3xl font-semibold mb-4">
+                A clear flow from purchase order to finished product.
               </h2>
               <p
-                className="text-sm sm:text-base"
+                className="max-w-md text-lg"
                 style={{ color: theme.textMuted }}
               >
-                Quickly see which items need attention, which recipes drive most
-                of your usage, and how orders are impacting stock levels.
+                PantryPilot mirrors how your team actually works — no friction,
+                no hacks.
               </p>
-              <ul
-                className="space-y-2 text-sm"
-                style={{ color: theme.text }}
-              >
-                <li>Low stock alerts before you run out of key ingredients.</li>
-                <li>
-                  Visibility into which products consume the most inventory.
-                </li>
-                <li>Consistent recipes that keep quality and cost in check.</li>
-              </ul>
             </div>
+
+            {/* PANEL 2 */}
+            <div className="workflow-panel flex min-w-full flex-col justify-center px-12">
+              <img
+                src="https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg"
+                alt="Ingredients laid out for baking"
+                className="mb-6 h-56 w-full rounded-xl object-cover shadow-md"
+              />
+              <span className="text-sm uppercase tracking-wide mb-2">
+                Step 1
+              </span>
+              <h3 className="text-2xl font-semibold mb-2">
+                Add inventory
+              </h3>
+              <p className="max-w-md">
+                Capture ingredients with quantities and units in one place.
+              </p>
+            </div>
+
+            {/* PANEL 3 */}
+            <div className="workflow-panel flex min-w-full flex-col justify-center px-12">
+              <img
+                src="https://images.pexels.com/photos/616404/pexels-photo-616404.jpeg"
+                alt="Preparing a baking recipe"
+                className="mb-6 h-56 w-full rounded-xl object-cover shadow-md"
+              />
+              <span className="text-sm uppercase tracking-wide mb-2">
+                Step 2
+              </span>
+              <h3 className="text-2xl font-semibold mb-2">
+                Define recipes
+              </h3>
+              <p className="max-w-md">
+                Link ingredients to recipes once — PantryPilot handles the math.
+              </p>
+            </div>
+
+            {/* PANEL 4 */}
+            <div className="workflow-panel flex min-w-full flex-col justify-center px-12">
+              <img
+                src="https://images.pexels.com/photos/1640772/pexels-photo-1640772.jpeg"
+                alt="Checking inventory shelves"
+                className="mb-6 h-56 w-full rounded-xl object-cover shadow-md"
+              />
+              <span className="text-sm uppercase tracking-wide mb-2">
+                Step 3
+              </span>
+              <h3 className="text-2xl font-semibold mb-2">
+                Track orders
+              </h3>
+              <p className="max-w-md">
+                Inventory updates automatically as orders are fulfilled.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* CONTINUE NORMAL SCROLL */}
+        <section className="fade-up py-24">
+          <div className="grid gap-12 md:grid-cols-2 md:items-center">
+            {/* TEXT SIDE */}
+            <div className="space-y-5">
+              <h2 className="text-3xl font-semibold">
+                Understand your inventory at a glance.
+              </h2>
+
+              <p
+                className="text-lg"
+                style={{ color: theme.textMuted }}
+              >
+                PantryPilot turns raw stock data into clear signals, so you always
+                know what needs attention — before it becomes a problem.
+              </p>
+
+              <ul className="space-y-3 text-sm">
+                <li className="flex gap-2">
+                  <span>✔</span>
+                  <span>Instant visibility into low-stock ingredients</span>
+                </li>
+                <li className="flex gap-2">
+                  <span>✔</span>
+                  <span>See which recipes consume the most inventory</span>
+                </li>
+                <li className="flex gap-2">
+                  <span>✔</span>
+                  <span>Make confident purchasing decisions with real data</span>
+                </li>
+              </ul>
+
+              <Button
+                variant="primary"
+                className="mt-4 w-fit px-6 py-3 text-sm"
+                onClick={() => navigate("/login")}
+              >
+                View insights
+              </Button>
+            </div>
+
+            {/* IMAGE SIDE */}
             <div
-              className="rounded-2xl border p-5 text-sm"
-              style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+              className="overflow-hidden rounded-2xl border shadow-xl"
+              style={{ borderColor: theme.border }}
             >
-              <div className="mb-4 flex items-center justify-between">
-                <span
-                  className="font-medium"
-                  style={{ color: theme.text }}
-                >
-                  Inventory health
-                </span>
-                <span
-                  className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                  style={{
-                    backgroundColor: theme.surfaceAlt,
-                    color: theme.primary,
-                  }}
-                >
-                  Stable
-                </span>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span style={{ color: theme.text }}>Items at healthy stock</span>
-                  <span
-                    className="font-semibold"
-                    style={{ color: theme.primary }}
-                  >
-                    87%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span style={{ color: theme.text }}>
-                    Items to reorder soon
-                  </span>
-                  <span className="font-semibold text-amber-300">9%</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span style={{ color: theme.text }}>Critical low stock</span>
-                  <span className="font-semibold text-rose-300">4%</span>
-                </div>
-              </div>
+              <img
+                src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1400&auto=format&fit=crop"
+                alt="Inventory insights and planning overview"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
             </div>
           </div>
         </section>
       </main>
-
       <footer
-        className="border-t"
+        className="w-full border-t"
         style={{
           borderColor: theme.border,
           backgroundColor: theme.surfaceAlt,
         }}
       >
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs sm:flex-row">
-          <p style={{ color: theme.textMuted }}>
-            © {new Date().getFullYear()} PantryPilot. All rights reserved.
-          </p>
-          <div className="flex items-center gap-4">
-            <span style={{ color: theme.textMuted }}>Inventory made simple.</span>
+        {/* INNER CONTENT CONTAINER */}
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4">
+
+            {/* BRAND */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-lg"
+                  style={{
+                    backgroundColor: theme.surface,
+                    color: theme.primary,
+                  }}
+                >
+                  🧁
+                </div>
+                <span className="font-semibold">PantryPilot</span>
+              </div>
+              <p
+                className="text-sm"
+                style={{ color: theme.textMuted }}
+              >
+                Inventory management built for home bakers and small kitchens.
+                Stay in control from ingredient to order.
+              </p>
+            </div>
+
+            {/* PRODUCT */}
+            <div>
+              <p className="mb-3 text-lg font-semibold">Product</p>
+              <ul className="space-y-2 text-sm">
+                <li className="cursor-pointer hover:underline">Features</li>
+                <li className="cursor-pointer hover:underline">Workflow</li>
+                <li className="cursor-pointer hover:underline">Insights</li>
+              </ul>
+            </div>
+
+            {/* COMPANY */}
+            <div>
+              <p className="mb-3 text-sm font-semibold">Company</p>
+              <ul className="space-y-2 text-sm">
+                <li className="cursor-pointer hover:underline">About</li>
+                <li className="cursor-pointer hover:underline">Contact</li>
+                <li className="cursor-pointer hover:underline">Support</li>
+              </ul>
+            </div>
+
+            {/* CTA */}
+            <div className="space-y-3">
+              <p className="text-lg font-semibold">Get started</p>
+              <p
+                className="text-sm"
+                style={{ color: theme.textMuted }}
+              >
+                Start tracking inventory in minutes. No credit card required.
+              </p>
+              <Button
+                variant="primary"
+                className="w-fit px-4 py-2 text-sm"
+                onClick={() => navigate("/login")}
+              >
+                Try for free
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* FULL-WIDTH BOTTOM BAR */}
+        <div
+          className="w-full border-t"
+          style={{ borderColor: theme.border }}
+        >
+          <div
+            className="mx-auto max-w-6xl px-4 py-4 flex flex-col gap-4 text-sm sm:flex-row sm:items-center sm:justify-between"
+            style={{ color: theme.textMuted }}
+          >
+            <p>
+              © {new Date().getFullYear()} PantryPilot. All rights reserved.
+            </p>
+            <div className="flex gap-4">
+              <span className="cursor-pointer hover:underline">
+                Privacy
+              </span>
+              <span className="cursor-pointer hover:underline">
+                Terms
+              </span>
+            </div>
           </div>
         </div>
       </footer>

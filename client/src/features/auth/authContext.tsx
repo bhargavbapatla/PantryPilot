@@ -20,37 +20,70 @@ type ThemePalette = {
   chartLine: string;
 };
 
+// const themePresets: Record<ThemeName, ThemePalette> = {
+//   pantryLight: {
+//     name: "pantryLight",
+//     background: "#FFFBEF",
+//     // surface: "#FFFFFF",
+//     // surfaceAlt: "#F7F5F3",
+//     // border: "#BBBDBC",
+//     primary: "#FAD1DA",
+//     primaryText: "#70000E",
+//     secondary: "#A5231C",
+//     // secondaryText: "#F2F0EF",
+//     text: "#70000E",
+//     // textMuted: "#733E24",
+//     // neutral: "#BBBDBC",
+//     // background: "#F5F5F5",      // LiPght gray
+//     surface: "#FFFFFF",         // White for cards
+//     surfaceAlt: "#E8E8E8",      // Slightly darker gray
+//     border: "#CCCCCC",          // Light gray
+//     // primary: "#001F3F",         // Deep Navy Blue
+//     // primaryText: "#FFFFFF",     // White text on navy
+//     // secondary: "#D4AF37",       // Metallic Gold for accents
+//     secondaryText: "#000000",   // Black text on gold
+//     // text: "#111111",            // Almost black for main text
+//     textMuted: "#666666",       // Dark gray for subtitles
+//     neutral: "#666666",
+//     cardColor: "#FFF9F4",
+//     chartLine:"#828F58",
+//     fontFamily:
+//       '"Roboto", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+//   },
+// };
+
 const themePresets: Record<ThemeName, ThemePalette> = {
   pantryLight: {
     name: "pantryLight",
-    background: "#FFFBEF",
-    // surface: "#FFFFFF",
-    // surfaceAlt: "#F7F5F3",
-    // border: "#BBBDBC",
-    primary: "#FAD1DA",
-    primaryText: "#70000E",
-    secondary: "#A5231C",
-    // secondaryText: "#F2F0EF",
-    text: "#70000E",
-    // textMuted: "#733E24",
-    // neutral: "#BBBDBC",
-    // background: "#F5F5F5",      // LiPght gray
-    surface: "#FFFFFF",         // White for cards
-    surfaceAlt: "#E8E8E8",      // Slightly darker gray
-    border: "#CCCCCC",          // Light gray
-    // primary: "#001F3F",         // Deep Navy Blue
-    // primaryText: "#FFFFFF",     // White text on navy
-    // secondary: "#D4AF37",       // Metallic Gold for accents
-    secondaryText: "#000000",   // Black text on gold
-    // text: "#111111",            // Almost black for main text
-    textMuted: "#666666",       // Dark gray for subtitles
-    neutral: "#666666",
-    cardColor: "#FFF9F4",
-    chartLine:"#828F58",
+
+    // Base
+    background: "#FFFFFF",
+    surface: "#FFFFFF",
+    surfaceAlt: "#F6F9FC",      // Stripe-like soft section bg
+    border: "#E6EBF1",
+    cardColor: "#FFFFFF",
+
+    // Brand / CTA
+    primary: "#635BFF",         // Stripe purple
+    primaryText: "#FFFFFF",
+
+    // Secondary (subtle, not loud)
+    secondary: "#0A2540",       // Deep navy
+    secondaryText: "#FFFFFF",
+
+    // Text
+    text: "#0A2540",            // Stripe navy text
+    textMuted: "#425466",       // Stripe-style muted text
+
+    // Neutral / UI
+    neutral: "#0A2540",
+    chartLine: "#635BFF",
+
     fontFamily:
-      '"Roboto", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
 };
+
 
 interface User {
   id: string;
