@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { type ColumnDef } from "@tanstack/react-table";
 import * as Yup from "yup";
@@ -7,16 +7,21 @@ import Drawer from "@mui/material/Drawer";
 import Button from "../../../components/Button";
 import DataTable from "../../../components/table/DataTable";
 import TextField from "../../../components/TextField";
-import { addRecipe, deleteRecipe, updateRecipe, type RecipeItem, type RecipeIngredient } from "../../../store/slices/recipesSlice";
+import { addRecipe, deleteRecipe, updateRecipe, setRecipes, type RecipeItem, type RecipeIngredient } from "../../../store/slices/recipesSlice";
 import type { RootState, AppDispatch } from "../../../store";
 import { toast } from "react-hot-toast";
-import type { Unit } from "../../../store/slices/inventorySlice";
+import { setItems, type InventoryItem, type Unit } from "../../../store/slices/inventorySlice";
 import { useAuth } from "../../../features/auth/authContext";
+import { deleteProductById, getProductById, getProducts, postProductData, updateProductsbyId } from "../../../api/products";
+import Loader from "../../../components/Loader";
+import { getInventory } from "../../../api/inventory";
 
 const unitToGramsFactor: Record<Unit, number> = {
-  grams: 1,
-  kgs: 1000,
-  pounds: 453.592,
+  GRAMS: 1,
+  KGS: 1000,
+  POUNDS: 453.592,
+  LITERS: 1000,
+  PIECES: 1,
 };
 
 const toGrams = (value: number, unit: Unit): number =>
@@ -27,6 +32,7 @@ type IngredientForm = {
   inventoryId: string;
   quantityNeeded: string;
   unit: Unit;
+  price: number;
 };
 
 const Recipes = () => {
@@ -35,6 +41,7 @@ const Recipes = () => {
   const inventoryItems = useSelector((state: RootState) => state.inventory.items);
   const { theme } = useAuth();
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<RecipeItem | null>(null);
 
   const handleOpen = () => {
@@ -46,37 +53,41 @@ const Recipes = () => {
     setEditingItem(null);
   };
 
+
+
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
       name: editingItem?.name ?? "",
-      sellingPrice: editingItem ? String(editingItem.sellingPrice) : "",
+      makingCharge: editingItem ? String(editingItem.makingCharge) : "",
       description: editingItem?.description ?? "",
       ingredients: editingItem
         ? editingItem.ingredients.map<IngredientForm>((ing) => ({
           id: ing.id,
           inventoryId: ing.inventoryId ?? "",
           quantityNeeded:
-            ing.quantityNeeded !== undefined ? String(ing.quantityNeeded) : "",
-          unit: ing.unit ?? "grams",
+            ing.quantity !== undefined ? String(ing.quantity) : "",
+          unit: ing.unit ?? "GRAMS",
+          price: ing.price !== undefined ? ing.price : 0,
         }))
         : [],
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Recipe name is required"),
-      sellingPrice: Yup.number()
+      makingCharge: Yup.number()
         .typeError("Enter a number")
         .positive("Must be positive")
-        .required("Selling price is required"),
+        .required("Making charge is required"),
       description: Yup.string().optional(),
     }),
-    onSubmit: (values, helpers) => {
+    onSubmit: async (values, helpers) => {
+      setLoading(true);
       let hasInventoryError = false;
       if (values.ingredients.length === 0) {
         toast.error("Add at least one ingredient");
+        setLoading(false);
         return;
       }
-      console.log("VALLLL", values.ingredients);
       values.ingredients.forEach((ing, index) => {
         if (!ing.inventoryId || ing.inventoryId === "") {
           hasInventoryError = true;
@@ -106,7 +117,8 @@ const Recipes = () => {
         const requestedGrams = toGrams(requestedQuantity, ing.unit);
         const availableTotal = inventoryItem.weight * inventoryItem.quantity;
         const availableGrams = toGrams(availableTotal, inventoryItem.unit);
-
+        console.log("requestedGrams", requestedGrams, ing.unit);
+        console.log("availableGrams", availableGrams);
         if (requestedGrams > availableGrams) {
           hasInventoryError = true;
           toast.error(
@@ -116,6 +128,7 @@ const Recipes = () => {
       });
 
       if (hasInventoryError) {
+        setLoading(false);
         return;
       }
 
@@ -125,44 +138,78 @@ const Recipes = () => {
           inventoryId: ing.inventoryId || null,
           quantityNeeded: Number(ing.quantityNeeded) || 0,
           unit: ing.unit,
+          price: ing.price || 0,
         })
       );
 
       if (editingItem) {
-        dispatch(
-          updateRecipe({
-            id: editingItem.id,
-            name: values.name,
-            sellingPrice: Number(values.sellingPrice),
-            description: values.description,
-            ingredients: mappedIngredients,
-          })
-        );
-        toast.success("Recipe updated");
+        const { data, status, message } = await updateProductsbyId({
+          id: editingItem.id,
+          name: values.name,
+          makingCharge: Number(values.makingCharge),
+          description: values.description,
+          ingredients: mappedIngredients,
+        }, editingItem.id || "")
+        if (status === 201 || status === 200) {
+          console.log("datadatadata", data);
+          dispatch(
+            updateRecipe({...data})
+          );
+          toast.success(message || "Recipe updated");
+        } else {
+          toast.error(message || "Error updating recipe");
+        }
       } else {
-        dispatch(
-          addRecipe({
-            name: values.name,
-            sellingPrice: Number(values.sellingPrice),
-            description: values.description,
-            ingredients: mappedIngredients,
-          })
-        );
-        toast.success("Recipe added");
+        const { data, status, message } = await postProductData({
+          name: values.name,
+          makingCharge: Number(values.makingCharge),
+          description: values.description,
+          ingredients: mappedIngredients,
+        })
+        if (status === 201 || status === 200) {
+          dispatch(
+            addRecipe({
+              ...data,
+              // ingredients: mappedIngredients,
+            })
+          );
+          toast.success(message || "Recipe added");
+
+        } else {
+          toast.error(message || "Error adding recipe");
+        }
+
       }
+      setLoading(false);
       helpers.resetForm();
       handleClose();
     },
   });
 
-  const handleEdit = (item: RecipeItem) => {
-    setEditingItem(item);
+  const handleEdit = async (item: RecipeItem) => {
     handleOpen();
+    setLoading(true);
+    const { data, status, message } = await getProductById(item.id || "");
+    if (status === 200) {
+      console.log("datadatadata", data);
+      setEditingItem(data);
+      // handleOpen();
+    } else {
+      toast.error(message || "Error fetching recipe");
+    }
+    setLoading(false);
   };
 
-  const handleDelete = (id: string) => {
-    dispatch(deleteRecipe(id));
-    toast.success("Recipe deleted");
+  const handleDelete = async (id: string) => {
+    setLoading(true);
+    const { data, status, message } = await deleteProductById(id);
+    if (status === 200 || status === 204) {
+      dispatch(deleteRecipe(id));
+      toast.success("Recipe deleted");
+    } else {
+      toast.error(message || "Error deleting recipe");
+    }
+    setLoading(false);
   };
 
   const handleAddIngredientRow = () => {
@@ -170,16 +217,18 @@ const Recipes = () => {
       id: String(Date.now()),
       inventoryId: "",
       quantityNeeded: "",
-      unit: "grams",
+      unit: "GRAMS",
+      price: 0,
     };
     formik.setFieldValue("ingredients", [...formik.values.ingredients, next]);
   };
 
-  const handleChangeIngredientInventory = (id: string, inventoryId: string) => {
+  const handleChangeIngredientInventory = (id: string, inventoryId: string, price: any) => {
+    console.log("price", price);
     formik.setFieldValue(
       "ingredients",
       formik.values.ingredients.map((ing) =>
-        ing.id === id ? { ...ing, inventoryId } : ing
+        ing.id === id ? { ...ing, inventoryId, price } : ing
       )
     );
   };
@@ -211,7 +260,7 @@ const Recipes = () => {
 
   const columns: ColumnDef<RecipeItem, unknown>[] = [
     { header: "Name", accessorKey: "name" },
-    { header: "Selling Price", accessorKey: "sellingPrice" },
+    { header: "Making Charge", accessorKey: "makingCharge" },
     {
       header: "Ingredients",
       cell: ({ row }) => row.original.ingredients.length,
@@ -223,7 +272,7 @@ const Recipes = () => {
         const item = row.original;
         return (
           <div className="flex items-center space-x-2">
-            <button
+            <Button
               type="button"
               title="Edit"
               onClick={() => handleEdit(item)}
@@ -244,8 +293,8 @@ const Recipes = () => {
                   d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L8.25 19.04 4 20l.96-4.25 11.902-11.263Z"
                 />
               </svg>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               title="Delete"
               onClick={() => handleDelete(item.id)}
@@ -266,13 +315,76 @@ const Recipes = () => {
                   d="M6 7h12M10 11v6m4-6v6M9 4h6a1 1 0 0 1 1 1v2H8V5a1 1 0 0 1 1-1Zm-1 4h8l-.6 11.2A1 1 0 0 1 14.4 20H9.6a1 1 0 0 1-.998-.8L8 8Z"
                 />
               </svg>
-            </button>
+            </Button>
           </div>
         );
       },
       enableSorting: false,
     },
   ];
+
+  const getTotalCost = () => {
+    const makingCharge = Number(formik.values.makingCharge) || 0;
+
+    const ingredientsCost = formik.values.ingredients.reduce((acc, ing) => {
+      const inventoryItem = inventoryItems.find((inv) => inv.id === ing.inventoryId);
+
+      if (!inventoryItem || !inventoryItem.price) {
+        return acc;
+      }
+
+      const inventoryItemBaseWeightInGrams = toGrams(inventoryItem.weight, inventoryItem.unit);
+
+      if (inventoryItemBaseWeightInGrams === 0) return acc;
+
+      const pricePerGram = inventoryItem.price / inventoryItemBaseWeightInGrams;
+
+      const quantityNeededInGrams = toGrams(Number(ing.quantityNeeded) || 0, ing.unit);
+
+      return acc + (quantityNeededInGrams * pricePerGram);
+    }, 0);
+
+    return Number((makingCharge + ingredientsCost).toFixed(2));
+  };
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      const { data, message, status } = await getProducts();
+      console.log("loadInitialData", data);
+      if (status === 200) {
+        dispatch(setRecipes(data));
+      } else {
+        toast.error(message || "Error loading recipes");
+        console.error("Error loading inventory items:", message);
+      }
+    } catch (error) {
+      console.error("Error loading inventory items:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadInventoryItems = async () => {
+    setLoading(true);
+    const [inventoryRes, productsRes] = await Promise.all([
+      getInventory(),
+      getProducts()
+    ]);
+    if (inventoryRes.status === 200 && productsRes.status === 200) {
+      dispatch(setItems(inventoryRes.data));
+      dispatch(setRecipes(productsRes.data));
+    } else {
+      toast.error(inventoryRes.message || productsRes.message || "Error loading inventory items");
+      console.error("Error loading inventory items:", inventoryRes.message || productsRes.message);
+    }
+  setLoading(false);
+
+  };
+  useEffect(() => {
+    // loadInitialData();
+    loadInventoryItems();
+  }, []);
 
   return (
     <div
@@ -295,7 +407,14 @@ const Recipes = () => {
           Add New Recipe
         </Button>
       </div>
-      <DataTable columns={columns} data={items} />
+      <div className="relative">
+        {loading && !open && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
+            <Loader />
+          </div>
+        )}
+        <DataTable columns={columns} data={items} />
+      </div>
 
       <Drawer
         anchor="right"
@@ -306,10 +425,15 @@ const Recipes = () => {
         }}
       >
         <div
-          className="h-full w-full flex flex-col"
+          className="h-full w-full flex flex-col relative"
           onClick={(e) => e.stopPropagation()}
           style={{ backgroundColor: theme.background }}
         >
+          {loading && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
+              <Loader />
+            </div>
+          )}
           <div
             className="px-5 py-4 border-b"
             style={{ borderColor: theme.border, backgroundColor: theme.surface }}
@@ -342,7 +466,7 @@ const Recipes = () => {
                     }}
                   >
                     <h3
-                      className="text-sm font-semibold"
+                      className="text-lg font-semibold"
                       style={{ color: theme.text }}
                     >
                       Recipe Details
@@ -364,16 +488,16 @@ const Recipes = () => {
                         required
                       />
                       <TextField
-                        label="Selling Price"
-                        name="sellingPrice"
+                        label="Making Charge"
+                        name="makingCharge"
                         type="number"
-                        value={formik.values.sellingPrice}
+                        value={formik.values.makingCharge}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         error={
-                          formik.touched.sellingPrice &&
-                          formik.errors.sellingPrice
-                            ? formik.errors.sellingPrice
+                          formik.touched.makingCharge &&
+                            formik.errors.makingCharge
+                            ? formik.errors.makingCharge
                             : undefined
                         }
                         required
@@ -419,13 +543,13 @@ const Recipes = () => {
                   >
                     <div>
                       <h3
-                        className="text-sm font-semibold"
+                        className="text-lg font-semibold"
                         style={{ color: theme.text }}
                       >
                         Ingredients &amp; Costing
                       </h3>
                       <p
-                        className="text-xs"
+                        className="text-sm"
                         style={{ color: theme.textMuted }}
                       >
                         Raw Materials Required
@@ -434,11 +558,27 @@ const Recipes = () => {
                     <Button
                       type="button"
                       fullWidth={false}
-                      className="px-3 py-1 text-xs"
+                      className="px-3 py-1 text-sm"
                       onClick={handleAddIngredientRow}
                     >
                       Add Ingredient Row
                     </Button>
+                  </div>
+                  <div
+                    className="px-4 py-2 border-b flex items-center justify-between"
+                    style={{
+                      borderColor: theme.border,
+                      backgroundColor: theme.surfaceAlt,
+                    }}
+                  >
+                    <div>
+                      <h3
+                        className="text-lg font-semibold"
+                        style={{ color: theme.text }}
+                      >
+                        Total Cost: {getTotalCost().toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                      </h3>
+                    </div>
                   </div>
                   <div className="px-4 py-3">
                     <div
@@ -455,31 +595,31 @@ const Recipes = () => {
                           }}
                         >
                           <tr>
-                            <th
-                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                              style={{ color: theme.textMuted }}
-                            >
-                              Ingredient Name
-                            </th>
-                            <th
-                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                              style={{ color: theme.textMuted }}
-                            >
-                              Quantity Needed
-                            </th>
-                            <th
-                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                              style={{ color: theme.textMuted }}
-                            >
-                              Unit
-                            </th>
-                            <th
-                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                              style={{ color: theme.textMuted }}
-                            >
-                              Action
-                            </th>
-                          </tr>
+                          <th
+                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                            style={{ color: theme.textMuted }}
+                          >
+                            Ingredient Name
+                          </th>
+                          <th
+                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                            style={{ color: theme.textMuted }}
+                          >
+                            Quantity Needed
+                          </th>
+                          <th
+                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                            style={{ color: theme.textMuted }}
+                          >
+                            Unit
+                          </th>
+                          <th
+                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                            style={{ color: theme.textMuted }}
+                          >
+                            Action
+                          </th>
+                        </tr>
                         </thead>
                         <tbody
                           className="divide-y"
@@ -489,21 +629,24 @@ const Recipes = () => {
                           }}
                         >
                           {formik.values.ingredients.map((ing) => {
-                            const inventoryItem = inventoryItems.find(
+                            const inventoryItem: InventoryItem | undefined = inventoryItems.find(
                               (inv) => inv.id === ing.inventoryId
                             );
-
+                            console.log("inventoryItem", inventoryItem);
                             return (
                               <tr key={ing.id}>
                                 <td className="px-4 py-2 text-sm">
                                   <select
                                     value={ing.inventoryId}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      const selectedItem = inventoryItems.find((inv) => inv.id === val);
                                       handleChangeIngredientInventory(
                                         ing.id,
-                                        e.target.value
-                                      )
-                                    }
+                                        val,
+                                        selectedItem?.price || 0,
+                                      );
+                                    }}
                                     className="w-full px-3 py-2 border rounded-md bg-white text-left border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
                                     style={{
                                       color: theme.text,
@@ -558,9 +701,11 @@ const Recipes = () => {
                                       borderColor: theme.border,
                                     }}
                                   >
-                                    <option value="grams">grams</option>
-                                    <option value="kgs">kgs</option>
-                                    <option value="pounds">pounds</option>
+                                    <option value="GRAMS">grams</option>
+                                    <option value="KGS">kgs</option>
+                                    <option value="POUNDS">pounds</option>
+                                    <option value="LITERS">liters</option>
+                                    <option value="PIECES">pieces</option>
                                   </select>
                                 </td>
                                 <td className="px-4 py-2 text-sm">

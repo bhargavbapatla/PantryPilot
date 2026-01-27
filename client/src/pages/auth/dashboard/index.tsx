@@ -41,7 +41,7 @@ const Dashboard = () => {
             >
               Dashboard
             </h1>
-            <p style={{ color: theme.textMuted }}>
+            <p className="text-sm" style={{ color: theme.textMuted }}>
               Welcome back to your inventory overview.
             </p>
           </div>
@@ -267,7 +267,7 @@ const Dashboard = () => {
                   <div className="flex items-center justify-between">
                     <p className="text-sm">{activity.action}</p>
                     <span
-                      className="text-xs"
+                      className="text-sm"
                       style={{ color: theme.textMuted }}
                     >
                       {activity.time}

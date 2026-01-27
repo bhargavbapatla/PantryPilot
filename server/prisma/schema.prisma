@@ -21,13 +21,22 @@ model User {
   createdAt DateTime @default(now())
 }
 
+enum Unit {
+  GRAMS
+  KGS
+  POUNDS
+  LITERS // Optional: Good to add now if you use milk/oil later
+  PIECES // Optional: For things like eggs
+}
+
 model Inventory {
   id                String       @id @default(uuid())
   name              String
   weight            Float
-  unit              String
+  unit              Unit
   isLowStockAlert   Boolean?     @default(false)
   lowStockThreshold Int?
+  lowStockThresholdUnit Unit?
   expiryDate        DateTime?
   expiresInDays     Int?
   expiryAlert       Boolean?     @default(false)
@@ -40,20 +49,22 @@ model Inventory {
 model Product {
   id          String       @id @default(uuid())
   name        String
-  sellPrice   Float
+  makingCharge   Float
   description String?
   ingredients Ingredient[]
   createdAt   DateTime     @default(now())
   orderItems  OrderItem[]
+  totalCostPrice Float
 }
 
 model Ingredient {
   id          String    @id @default(uuid())
-  product     Product   @relation(fields: [productId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId   String
   inventory   Inventory @relation(fields: [inventoryId], references: [id])
   inventoryId String
   quantity    Int
+  unit        Unit?
 
   @@unique([productId, inventoryId])
 }

@@ -3,6 +3,54 @@ import { register, login, googleSSOLogin } from '../controllers/authController.t
 
 const router = express.Router();
 
+router.post('/register', register)
+router.post('/login', login)
+/**
+ * @swagger
+ * /auth/googleLogin:
+ *   post:
+ *     summary: Login with Google SSO
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - googleToken
+ *             properties:
+ *               googleToken:
+ *                 type: string
+ *                 description: The ID token received from Google
+ *     responses:
+ *       200:
+ *         description: User logged in successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 status:
+ *                   type: integer
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     token:
+ *                       type: string
+ *       400:
+ *         description: Invalid Google Token
+ */
+router.post('/googleLogin', googleSSOLogin)
+
 /**
  * @swagger
  * /auth/register:
@@ -32,9 +80,7 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.post('/register', register)
-router.post('/login', login)
-router.post('/googleLogin', googleSSOLogin)
+
 /**
  * @swagger
  * /auth/login:

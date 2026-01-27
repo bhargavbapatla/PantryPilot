@@ -1,13 +1,22 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-export type Unit = 'grams' | 'kgs' | 'pounds';
+export type Unit = 'GRAMS' | 'KGS' | 'POUNDS' | 'LITERS' | 'PIECES';
+
+export type ExpiryUnit = 'days' | 'months' | 'years';
 
 export interface InventoryItem {
-  id: string;
+  id?: string;
   name: string;
   weight: number;
   unit: Unit;
   quantity: number;
+  price?: number;
+  isLowStockAlert?: boolean;
+  lowStockThreshold?: number;
+  lowStockThresholdUnit?: Unit;
+  isExpiryAlert?: boolean;
+  expiryValue?: number;
+  expiryUnit?: ExpiryUnit;
 }
 
 interface InventoryState {
@@ -36,6 +45,9 @@ const inventorySlice = createSlice({
       const id = String(Date.now());
       state.items.push({ id, ...action.payload });
     },
+    setItems: (state, action: PayloadAction<InventoryItem[]>) => {
+      state.items = action.payload;
+    },
     updateItem: (state, action: PayloadAction<InventoryItem>) => {
       const index = state.items.findIndex((item) => item.id === action.payload.id);
       if (index !== -1) {
@@ -48,5 +60,5 @@ const inventorySlice = createSlice({
   },
 });
 
-export const { setThreshold, updateSyncTime, addItem, updateItem, deleteItem } = inventorySlice.actions;
+export const { setThreshold, updateSyncTime, addItem, updateItem, deleteItem, setItems } = inventorySlice.actions;
 export default inventorySlice.reducer;

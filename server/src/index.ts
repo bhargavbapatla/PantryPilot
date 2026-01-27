@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import userRouter from './routes/user.ts';
 import authRouter from './routes/authRouters.ts';
+import dashboardRouter from './routes/dashboardRoutes.ts';
+import inventoryRouter from './routes/inventoryRoutes.ts';
+import productRouter from './routes/productRoutes.ts';
 import {config} from 'dotenv';
 import {connectDB, disconnectDB} from './config/db.ts';
 import swaggerUi from 'swagger-ui-express';
@@ -21,6 +24,9 @@ app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/auth', authRouter);
+app.use('/inventory', inventoryRouter);
+app.use('/dashboard', dashboardRouter);
+app.use('/products', productRouter);
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');
