@@ -96,9 +96,9 @@ export default function TextField({
         ) : null}
       </div>
       {error ? (
-        <p className="text-xs text-red-600">{error}</p>
+        <p className="text-sm text-red-600">{error}</p>
       ) : helperText ? (
-        <p className="text-xs text-gray-500">{helperText}</p>
+        <p className="text-sm text-gray-500">{helperText}</p>
       ) : null}
     </div>
   );

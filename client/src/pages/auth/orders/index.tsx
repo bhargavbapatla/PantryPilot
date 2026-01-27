@@ -136,7 +136,7 @@ const Orders = () => {
       cell: ({ row }) => {
         const value = row.original.status;
         const baseClasses =
-          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium";
+          "inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium";
         let colorClasses = "";
         if (value === "Pending") {
           colorClasses = "bg-yellow-100 text-yellow-800";
@@ -249,7 +249,7 @@ const Orders = () => {
           }}
         >
           <h3
-            className="text-sm font-semibold"
+            className="text-lg font-semibold"
             style={{ color: theme.text }}
           >
             Filters
@@ -396,13 +396,13 @@ const Orders = () => {
                       ))}
                     </select>
                     {formik.touched.productId && formik.errors.productId ? (
-                      <p className="text-xs text-red-600">
+                      <p className="text-sm text-red-600">
                         {formik.errors.productId}
                       </p>
                     ) : null}
                     {recipes.length === 0 && !editingItem && (
                       <p
-                        className="text-xs"
+                        className="text-sm"
                         style={{ color: theme.textMuted }}
                       >
                         No recipes available. Create a recipe before creating an order.
@@ -430,7 +430,7 @@ const Orders = () => {
                       }}
                     />
                     {formik.touched.orderDate && formik.errors.orderDate ? (
-                      <p className="text-xs text-red-600">
+                      <p className="text-sm text-red-600">
                         {formik.errors.orderDate}
                       </p>
                     ) : null}
@@ -459,7 +459,7 @@ const Orders = () => {
                       <option value="Cancelled">Cancelled</option>
                     </select>
                     {formik.touched.status && formik.errors.status ? (
-                      <p className="text-xs text-red-600">
+                      <p className="text-sm text-red-600">
                         {formik.errors.status}
                       </p>
                     ) : null}

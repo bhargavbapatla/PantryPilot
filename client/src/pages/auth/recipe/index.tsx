@@ -466,7 +466,7 @@ const Recipes = () => {
                     }}
                   >
                     <h3
-                      className="text-sm font-semibold"
+                      className="text-lg font-semibold"
                       style={{ color: theme.text }}
                     >
                       Recipe Details
@@ -543,13 +543,13 @@ const Recipes = () => {
                   >
                     <div>
                       <h3
-                        className="text-sm font-semibold"
+                        className="text-lg font-semibold"
                         style={{ color: theme.text }}
                       >
                         Ingredients &amp; Costing
                       </h3>
                       <p
-                        className="text-xs"
+                        className="text-sm"
                         style={{ color: theme.textMuted }}
                       >
                         Raw Materials Required
@@ -558,7 +558,7 @@ const Recipes = () => {
                     <Button
                       type="button"
                       fullWidth={false}
-                      className="px-3 py-1 text-xs"
+                      className="px-3 py-1 text-sm"
                       onClick={handleAddIngredientRow}
                     >
                       Add Ingredient Row
@@ -573,7 +573,7 @@ const Recipes = () => {
                   >
                     <div>
                       <h3
-                        className="text-sm font-semibold"
+                        className="text-lg font-semibold"
                         style={{ color: theme.text }}
                       >
                         Total Cost: {getTotalCost().toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
@@ -595,31 +595,31 @@ const Recipes = () => {
                           }}
                         >
                           <tr>
-                            <th
-                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                              style={{ color: theme.textMuted }}
-                            >
-                              Ingredient Name
-                            </th>
-                            <th
-                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                              style={{ color: theme.textMuted }}
-                            >
-                              Quantity Needed
-                            </th>
-                            <th
-                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                              style={{ color: theme.textMuted }}
-                            >
-                              Unit
-                            </th>
-                            <th
-                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
-                              style={{ color: theme.textMuted }}
-                            >
-                              Action
-                            </th>
-                          </tr>
+                          <th
+                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                            style={{ color: theme.textMuted }}
+                          >
+                            Ingredient Name
+                          </th>
+                          <th
+                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                            style={{ color: theme.textMuted }}
+                          >
+                            Quantity Needed
+                          </th>
+                          <th
+                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                            style={{ color: theme.textMuted }}
+                          >
+                            Unit
+                          </th>
+                          <th
+                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                            style={{ color: theme.textMuted }}
+                          >
+                            Action
+                          </th>
+                        </tr>
                         </thead>
                         <tbody
                           className="divide-y"

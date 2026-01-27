@@ -117,7 +117,7 @@ const Login = () => {
         </div>
       </div>
       <h2
-        className="text-xl font-medium text-center"
+        className="text-lg font-medium text-center"
         style={{ color: theme.text }}
       >
         Login
@@ -190,9 +190,10 @@ const Login = () => {
 
 
 
-        <div className="pt-2 flex justify-center">
+        <div className="pt-4 flex justify-center">
           <Button
             type="submit"
+            fullWidth
             onClick={() => formik.handleSubmit()}
             variant="primary"
           >
