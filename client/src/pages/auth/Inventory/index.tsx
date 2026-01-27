@@ -11,6 +11,7 @@ import type { RootState, AppDispatch } from "../../../store";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../features/auth/authContext";
 import { deleteInventory, editInventory, getInventory, postInventory } from "../../../api/inventory";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 import Loader from "../../../components/Loader";
 
 
@@ -33,6 +34,8 @@ const Inventory = () => {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const transitionMs = 200;
 
   const handleOpen = () => {
@@ -166,8 +169,11 @@ const Inventory = () => {
   };
 
   const handleDelete = async (id: string) => {
+    setDeleteModalOpen(true);
     setLoading(true);
-    const { status, message } = await deleteInventory(id);
+    const { status, message } = await deleteInventory(deleteId);
+    console.log("deleteId", deleteId, status);
+
     if (status == 200) {
       dispatch(deleteItem(id));
       toast.success(message || "Item deleted");
@@ -175,6 +181,12 @@ const Inventory = () => {
       toast.error(message || "Failed to delete item");
     }
     setLoading(false);
+  };
+
+  const handleDeleteButton = (id: string) => {
+    // handleDelete(deleteItemId);
+    setDeleteId(id);
+    setDeleteModalOpen(true);
   };
 
   const columns: ColumnDef<InventoryItem, unknown>[] = [
@@ -217,7 +229,7 @@ const Inventory = () => {
               type="button"
               title="Delete"
               variant="ghost"
-              onClick={() => handleDelete(item.id)}
+              onClick={() => handleDeleteButton(item.id)}
               className="rounded-md p-1 text-red-600/70 hover:text-red-600 hover:bg-red-50"
             >
               <svg
@@ -267,7 +279,15 @@ const Inventory = () => {
       toast.error(message || "Failed to delete item");
     }
     setLoading(false);
+    setDeleteModalOpen(false);
+
   }
+
+  const handleConfirmDelete = async () => {
+    if (deleteId) {
+      await deleteInventoryItem(deleteId);
+    }
+  };
 
   useEffect(() => {
     loadInitialData()
@@ -281,7 +301,7 @@ const Inventory = () => {
         fontFamily: theme.fontFamily,
       }}
     >
-      {loading && !open && (
+      {loading && !open && !deleteModalOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
           <Loader />
         </div>
@@ -307,6 +327,18 @@ const Inventory = () => {
       </div>
       <DataTable columns={columns} data={items} />
 
+      <ConfirmationModal
+        open={deleteModalOpen}
+        onClose={() => !loading && setDeleteModalOpen(false)}
+        title="Delete Item"
+        description="Are you sure you want to delete this item? This action cannot be undone."
+        primaryActionLabel="Delete"
+        secondaryActionLabel="Cancel"
+        onPrimaryAction={handleConfirmDelete}
+        primaryVariant="danger"
+        isLoading={loading}
+      />
+
       {mounted && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center ${open ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-out`}>
           <div
@@ -324,11 +356,6 @@ const Inventory = () => {
               color: theme.text,
             }}
           >
-            {loading && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px] rounded-xl">
-                <Loader />
-              </div>
-            )}
             <div
               className="px-5 py-4 border-b"
               style={{ borderColor: theme.border }}
@@ -586,10 +613,10 @@ const Inventory = () => {
                   className="px-5 py-3 border-t flex items-center justify-end space-x-2 flex-shrink-0"
                   style={{ borderColor: theme.border, backgroundColor: theme.surface }}
                 >
-                  <Button type="button" fullWidth={false} className="px-3 py-1 text-sm" onClick={handleClose} variant="secondary">
+                  <Button type="button" fullWidth={false} className="px-3 py-1 text-sm" onClick={handleClose} variant="secondary" disabled={loading}>
                     Cancel
                   </Button>
-                  <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm" variant="primary">
+                  <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm" variant="primary" loading={loading}>
                     {editingItem ? "Save Changes" : "Add"}
                   </Button>
                 </div>
