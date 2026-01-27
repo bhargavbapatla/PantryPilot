@@ -325,7 +325,7 @@ const Inventory = () => {
           Add New Item
         </Button>
       </div>
-      <DataTable columns={columns} data={items} />
+      <DataTable columns={columns} data={items} isLoading={loading} />
 
       <ConfirmationModal
         open={deleteModalOpen}
