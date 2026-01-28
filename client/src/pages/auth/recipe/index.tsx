@@ -46,8 +46,11 @@ const Recipes = () => {
   const [editingItem, setEditingItem] = useState<RecipeItem | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [initiateEdit, setInitiateEdit] = useState(false);
+
 
   const handleOpen = () => {
+    setInitiateEdit(true);
     setOpen(true);
   };
 
@@ -146,6 +149,7 @@ const Recipes = () => {
       );
 
       if (editingItem) {
+        setInitiateEdit(false);
         const { data, status, message } = await updateProductsbyId({
           id: editingItem.id,
           name: values.name,
@@ -163,6 +167,7 @@ const Recipes = () => {
           toast.error(message || "Error updating recipe");
         }
       } else {
+        setInitiateEdit(false);
         const { data, status, message } = await postProductData({
           name: values.name,
           makingCharge: Number(values.makingCharge),
@@ -459,6 +464,11 @@ const Recipes = () => {
           onClick={(e) => e.stopPropagation()}
           style={{ backgroundColor: theme.background }}
         >
+          {loading && initiateEdit && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
+              <Loader />
+            </div>
+          )}
           <div
             className="px-5 py-4 border-b"
             style={{ borderColor: theme.border, backgroundColor: theme.surface }}
