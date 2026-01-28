@@ -27,6 +27,7 @@ import {
   useTheme,
   useMediaQuery,
   Badge,
+  keyframes,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -39,6 +40,13 @@ import {
   Settings as SettingsIcon,
   Notifications as NotificationsIcon,
 } from '@mui/icons-material';
+
+const shakeAnimation = keyframes`
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+`;
 
 const DashboardLayout = () => {
   const { logout, user } = useAuth();
@@ -146,11 +154,25 @@ const DashboardLayout = () => {
         onClose={() => setMobileOpen(false)}
         sx={{
           width: drawerWidth,
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
+          boxSizing: 'border-box',
+          transition: (theme) =>
+            theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             bgcolor: '#ffffff',
             borderRight: '1px solid #e5e7eb',
             fontSize: '13.5px',
+            overflowX: 'hidden',
+            transition: (theme) =>
+              theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
           },
         }}
       >
@@ -199,6 +221,10 @@ const DashboardLayout = () => {
                     },
                     '&.Mui-selected': {
                       bgcolor: '#eef2ff',
+                    },
+                    '&:hover .MuiListItemIcon-root': {
+                      animation: `${shakeAnimation} 0.5s ease-in-out`,
+                      color: '#4f46e5',
                     },
                   }}
                 >
