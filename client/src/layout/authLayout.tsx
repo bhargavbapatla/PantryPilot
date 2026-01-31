@@ -1,39 +1,79 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useAuth } from '../features/auth/authContext';
+import { useState, useEffect } from 'react';
+
+const BACKGROUND_IMAGES = [
+  "https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=1920&auto=format&fit=crop", // Ingredients
+  "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?q=80&w=1920&auto=format&fit=crop", // Dough/Flour
+  "https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=1920&auto=format&fit=crop", // Pastries
+];
 
 const AuthLayout = () => {
-    const { token, theme } = useAuth();
-    if (!token) {
-        return (
-            // 1. MAIN CONTAINER: Full screen height, centered content, light gray background
-            <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: theme.cardColor }}>
+  const { token, theme } = useAuth();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
-                {/* 2. THE CARD: White background, shadow, rounded corners */}
-                <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
+  const prefersReducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
 
-                    {/* 3. HEADER: Branding Section (Logo & Title) */}
-                    
+  useEffect(() => {
+    if (paused) return;
+    if (prefersReducedMotion) return;
 
-                    {/* 4. THE OUTLET: This is where Login.tsx / Signup.tsx will automatically appear */}
-                    <div className="mt-8">
-                        <Outlet />
-                    </div>
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % BACKGROUND_IMAGES.length);
+    }, 5000); // Change every 5 seconds
 
-                    {/* 5. FOOTER: Simple copyright or links */}
-                    <div className="mt-6 text-center text-sm text-gray-400">
-                        &copy; {new Date().getFullYear()} Mom's Bakery Inc.
-                    </div>
+    return () => clearInterval(interval);
+  }, [paused]);
 
-                </div>
-            </div>
-        );
-    } else {
-        return (
-            <div>
-                
-            </div>
-        );
-    }
+  if (token) {
+    return <Outlet />;
+  }
+
+  return (
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+
+      {/* ================= LEFT IMAGE ================= */}
+      <div className="hidden lg:block relative w-full h-full overflow-hidden">
+        {BACKGROUND_IMAGES.map((img, index) => (
+          <img
+            key={img}
+            src={img}
+            alt={`Bakery background ${index + 1}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out scale-[1.02] ${index === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.02]'
+              }`}
+          />
+        ))}
+        {/* <div className="absolute inset-0 bg-black/10"></div> */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
+
+
+        {/* Logo Overlay */}
+        {/* <div className="absolute top-8 left-8 z-10 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm">
+            <span className="text-xl">🧁</span>
+          </div>
+          <span className="text-2xl font-bold text-white drop-shadow-md tracking-tight">
+            PantryPilot
+          </span>
+        </div> */}
+      </div>
+
+      {/* ================= RIGHT CONTENT ================= */}
+      <div
+        className="flex items-center justify-center px-6"
+        style={{ backgroundColor: theme.background }}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={() => setPaused(false)}
+      >
+        <div className="w-full max-w-md">
+          <Outlet />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default AuthLayout;

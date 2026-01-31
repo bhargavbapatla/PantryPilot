@@ -24,7 +24,7 @@ export default function Loader() {
           content: "";
           position: absolute;
           inset: 0;
-          background: #70000E;
+          background: #0A2540;
         }
 
         .banter-loader__box:nth-child(3n) {

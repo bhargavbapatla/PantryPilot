@@ -14,6 +14,7 @@ import { setItems, type InventoryItem, type Unit } from "../../../store/slices/i
 import { useAuth } from "../../../features/auth/authContext";
 import { deleteProductById, getProductById, getProducts, postProductData, updateProductsbyId } from "../../../api/products";
 import Loader from "../../../components/Loader";
+import ConfirmationModal from "../../../components/ConfirmationModal";
 import { getInventory } from "../../../api/inventory";
 
 const unitToGramsFactor: Record<Unit, number> = {
@@ -43,8 +44,13 @@ const Recipes = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<RecipeItem | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [initiateEdit, setInitiateEdit] = useState(false);
+
 
   const handleOpen = () => {
+    setInitiateEdit(true);
     setOpen(true);
   };
 
@@ -143,6 +149,7 @@ const Recipes = () => {
       );
 
       if (editingItem) {
+        setInitiateEdit(false);
         const { data, status, message } = await updateProductsbyId({
           id: editingItem.id,
           name: values.name,
@@ -153,13 +160,14 @@ const Recipes = () => {
         if (status === 201 || status === 200) {
           console.log("datadatadata", data);
           dispatch(
-            updateRecipe({...data})
+            updateRecipe({ ...data })
           );
           toast.success(message || "Recipe updated");
         } else {
           toast.error(message || "Error updating recipe");
         }
       } else {
+        setInitiateEdit(false);
         const { data, status, message } = await postProductData({
           name: values.name,
           makingCharge: Number(values.makingCharge),
@@ -200,16 +208,27 @@ const Recipes = () => {
     setLoading(false);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+
     setLoading(true);
-    const { data, status, message } = await deleteProductById(id);
+
+    const { data, status, message } = await deleteProductById(deleteId);
     if (status === 200 || status === 204) {
-      dispatch(deleteRecipe(id));
+      dispatch(deleteRecipe(deleteId));
       toast.success("Recipe deleted");
+      setDeleteModalOpen(false);
     } else {
       toast.error(message || "Error deleting recipe");
     }
+
     setLoading(false);
+    setDeleteId(null);
   };
 
   const handleAddIngredientRow = () => {
@@ -271,10 +290,11 @@ const Recipes = () => {
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-xs-1">
             <Button
               type="button"
               title="Edit"
+              variant="ghost"
               onClick={() => handleEdit(item)}
               className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
               style={{ color: theme.textMuted }}
@@ -297,23 +317,26 @@ const Recipes = () => {
             <Button
               type="button"
               title="Delete"
-              onClick={() => handleDelete(item.id)}
+              variant="ghost"
+              onClick={() => handleDeleteClick(item.id)}
               className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
               style={{ color: theme.secondary }}
             >
               <svg
-                className="w-4 h-4"
                 xmlns="http://www.w3.org/2000/svg"
-                fill="none"
+                className="w-4 h-4"
                 viewBox="0 0 24 24"
+                fill="none"
                 stroke="currentColor"
-                strokeWidth="1.8"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 7h12M10 11v6m4-6v6M9 4h6a1 1 0 0 1 1 1v2H8V5a1 1 0 0 1 1-1Zm-1 4h8l-.6 11.2A1 1 0 0 1 14.4 20H9.6a1 1 0 0 1-.998-.8L8 8Z"
-                />
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
               </svg>
             </Button>
           </div>
@@ -378,7 +401,7 @@ const Recipes = () => {
       toast.error(inventoryRes.message || productsRes.message || "Error loading inventory items");
       console.error("Error loading inventory items:", inventoryRes.message || productsRes.message);
     }
-  setLoading(false);
+    setLoading(false);
 
   };
   useEffect(() => {
@@ -408,13 +431,25 @@ const Recipes = () => {
         </Button>
       </div>
       <div className="relative">
-        {loading && !open && (
+        {loading && !open && !deleteModalOpen && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
             <Loader />
           </div>
         )}
-        <DataTable columns={columns} data={items} />
+        <DataTable columns={columns} data={items} isLoading={loading} />
       </div>
+
+      <ConfirmationModal
+        open={deleteModalOpen}
+        onClose={() => !loading && setDeleteModalOpen(false)}
+        title="Delete Recipe"
+        description="Are you sure you want to delete this recipe? This action cannot be undone."
+        primaryActionLabel="Delete"
+        secondaryActionLabel="Cancel"
+        onPrimaryAction={handleConfirmDelete}
+        primaryVariant="danger"
+        isLoading={loading}
+      />
 
       <Drawer
         anchor="right"
@@ -429,7 +464,7 @@ const Recipes = () => {
           onClick={(e) => e.stopPropagation()}
           style={{ backgroundColor: theme.background }}
         >
-          {loading && (
+          {loading && initiateEdit && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
               <Loader />
             </div>
@@ -595,31 +630,31 @@ const Recipes = () => {
                           }}
                         >
                           <tr>
-                          <th
-                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
-                            style={{ color: theme.textMuted }}
-                          >
-                            Ingredient Name
-                          </th>
-                          <th
-                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
-                            style={{ color: theme.textMuted }}
-                          >
-                            Quantity Needed
-                          </th>
-                          <th
-                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
-                            style={{ color: theme.textMuted }}
-                          >
-                            Unit
-                          </th>
-                          <th
-                            className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
-                            style={{ color: theme.textMuted }}
-                          >
-                            Action
-                          </th>
-                        </tr>
+                            <th
+                              className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                              style={{ color: theme.textMuted }}
+                            >
+                              Ingredient Name
+                            </th>
+                            <th
+                              className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                              style={{ color: theme.textMuted }}
+                            >
+                              Quantity Needed
+                            </th>
+                            <th
+                              className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                              style={{ color: theme.textMuted }}
+                            >
+                              Unit
+                            </th>
+                            <th
+                              className="px-4 py-2 text-left text-sm font-medium uppercase tracking-wider"
+                              style={{ color: theme.textMuted }}
+                            >
+                              Action
+                            </th>
+                          </tr>
                         </thead>
                         <tbody
                           className="divide-y"
@@ -719,18 +754,20 @@ const Recipes = () => {
                                     style={{ color: theme.textMuted }}
                                   >
                                     <svg
-                                      className="w-4 h-4"
                                       xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
+                                      className="w-4 h-4"
                                       viewBox="0 0 24 24"
+                                      fill="none"
                                       stroke="currentColor"
-                                      strokeWidth="1.8"
+                                      strokeWidth="1.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
                                     >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M6 7h12M10 11v6m4-6v6M9 4h6a1 1 0 0 1 1 1v2H8V5a1 1 0 0 1 1-1Zm-1 4h8l-.6 11.2A1 1 0 0 1 14.4 20H9.6a1 1 0 0 1-.998-.8L8 8Z"
-                                      />
+                                      <path d="M3 6h18" />
+                                      <path d="M8 6V4h8v2" />
+                                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                                      <path d="M10 11v6" />
+                                      <path d="M14 11v6" />
                                     </svg>
                                   </button>
                                 </td>
@@ -764,18 +801,19 @@ const Recipes = () => {
                   className="px-3 py-1 text-sm"
                   onClick={handleClose}
                   variant="secondary"
+                  disabled={loading}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm" variant="primary">
+                <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm" variant="primary" loading={loading}>
                   {editingItem ? "Save Changes" : "Add"}
                 </Button>
               </div>
             </FormikProvider>
           </form>
         </div>
-      </Drawer>
-    </div>
+      </Drawer >
+    </div >
   );
 };
 
