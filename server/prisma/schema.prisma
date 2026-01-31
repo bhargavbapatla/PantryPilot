@@ -30,30 +30,30 @@ enum Unit {
 }
 
 model Inventory {
-  id                String       @id @default(uuid())
-  name              String
-  weight            Float
-  unit              Unit
-  isLowStockAlert   Boolean?     @default(false)
-  lowStockThreshold Int?
+  id                    String       @id @default(uuid())
+  name                  String
+  weight                Float
+  unit                  Unit
+  isLowStockAlert       Boolean?     @default(false)
+  lowStockThreshold     Int?
   lowStockThresholdUnit Unit?
-  expiryDate        DateTime?
-  expiresInDays     Int?
-  expiryAlert       Boolean?     @default(false)
-  quantity          Int
-  price             Float
-  ingredients       Ingredient[]
-  createdAt         DateTime     @default(now())
+  expiryDate            DateTime?
+  expiresInDays         Int?
+  expiryAlert           Boolean?     @default(false)
+  quantity              Int
+  price                 Float
+  ingredients           Ingredient[]
+  createdAt             DateTime     @default(now())
 }
 
 model Product {
-  id          String       @id @default(uuid())
-  name        String
+  id             String       @id @default(uuid())
+  name           String
   makingCharge   Float
-  description String?
-  ingredients Ingredient[]
-  createdAt   DateTime     @default(now())
-  orderItems  OrderItem[]
+  description    String?
+  ingredients    Ingredient[]
+  createdAt      DateTime     @default(now())
+  orderItems     OrderItem[]
   totalCostPrice Float
 }
 
@@ -69,14 +69,14 @@ model Ingredient {
   @@unique([productId, inventoryId])
 }
 
-model Client {
+model Customer {
   id        String   @id @default(uuid())
   name      String
-  email     String   @unique
-  phone     String?
+  email     String?   @unique
+  phone     String    @unique
   address   String?
   createdAt DateTime @default(now())
-  Order     Order[]
+  orders    Order[]
 }
 
 model OrderItem {
@@ -92,9 +92,11 @@ model OrderItem {
 model Order {
   id           String      @id @default(uuid())
   customerName String
-  client       Client?     @relation(fields: [clientId], references: [id])
-  clientId     String?
+  customer     Customer?   @relation(fields: [customerId], references: [id])
+  customerId   String?
   status       String      @default("pending")
   orderItems   OrderItem[]
+  grandTotal   Float
+  orderDate    DateTime    @default(now())
   createdAt    DateTime    @default(now())
 }

@@ -9,6 +9,7 @@ import {config} from 'dotenv';
 import {connectDB, disconnectDB} from './config/db.ts';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.ts';
+import orderRouter from './routes/orderRoutes.ts';
 
 config();
 connectDB();
@@ -26,6 +27,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/auth', authRouter);
 app.use('/inventory', inventoryRouter);
 app.use('/dashboard', dashboardRouter);
+app.use('/orders', orderRouter);
 app.use('/products', productRouter);
 
 app.get('/', (req, res) => {
