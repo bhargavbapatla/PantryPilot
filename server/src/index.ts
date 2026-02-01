@@ -10,6 +10,7 @@ import {connectDB, disconnectDB} from './config/db.ts';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.ts';
 import orderRouter from './routes/orderRoutes.ts';
+import customerRouter from './routes/customerRouters.ts';
 
 config();
 connectDB();
@@ -29,6 +30,7 @@ app.use('/inventory', inventoryRouter);
 app.use('/dashboard', dashboardRouter);
 app.use('/orders', orderRouter);
 app.use('/products', productRouter);
+app.use('/customers', customerRouter);
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');

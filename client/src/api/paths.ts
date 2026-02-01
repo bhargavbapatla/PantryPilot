@@ -4,3 +4,4 @@ export const userGoogleLogin = '/auth/googleLogin';
 export const Inventory = '/inventory';
 export const Product = '/products';
 export const orders = '/orders';
+export const customer = '/customers';

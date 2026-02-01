@@ -8,15 +8,17 @@ import MuiTextField from "@mui/material/TextField";
 import Button from "../../../components/Button";
 import DataTable from "../../../components/table/DataTable";
 import TextField from "../../../components/TextField";
-import { addOrder, deleteOrder, updateOrder } from "../../../store/slices/ordersSlice";
-import type { Order } from "../../../store/slices/ordersSlice";
+import { addOrder, deleteOrder, updateOrder, setOrders } from "../../../store/slices/ordersSlice";
+import type { Order, OrderItem } from "../../../store/slices/ordersSlice";
 import type { RootState, AppDispatch } from "../../../store";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../features/auth/authContext";
 import { getProducts } from "../../../api/products";
 import { setRecipes } from "../../../store/slices/recipesSlice";
 import Loader from "../../../components/Loader";
-import { createOrder } from "../../../api/orders";
+import { createOrder, getOrders } from "../../../api/orders";
+import { getCustomers } from "../../../api/customers";
+import { setCustomers } from "../../../store/slices/customerSlice";
 
 // --- TYPES ---
 type FormItem = {
@@ -53,6 +55,7 @@ const Orders = () => {
   // Redux Data
   const orders = useSelector((state: RootState) => state.orders.items);
   const recipes = useSelector((state: RootState) => state.recipes.items);
+  const customers = useSelector((state: RootState) => state.customers.items);
 
   // Local State
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -79,10 +82,6 @@ const Orders = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const existingCustomers = useMemo(() => {
-    return Array.from(new Set(orders.map((order) => order.customerName))).filter(Boolean);
-  }, [orders]);
-
   // --- HANDLERS ---
   const handleOpen = () => {
     setMounted(true);
@@ -103,12 +102,12 @@ const Orders = () => {
   const validationSchema = useMemo(() => Yup.object({
     customerName: Yup.string().required("Customer name is required"),
     phoneNumber: Yup.string().when('customerName', {
-      is: (name: string) => name && !existingCustomers.includes(name),
+      is: (name: string) => name && !customers.some(c => c.name === name),
       then: (schema) => schema.required("Phone number is required"),
       otherwise: (schema) => schema.optional(),
     }),
     address: Yup.string().when('customerName', {
-      is: (name: string) => name && !existingCustomers.includes(name),
+      is: (name: string) => name && !customers.some(c => c.name === name),
       then: (schema) => schema.required("Address is required"),
       otherwise: (schema) => schema.optional(),
     }),
@@ -124,7 +123,7 @@ const Orders = () => {
     orderDate: Yup.string().required("Order date is required"),
     status: Yup.mixed().oneOf(["Pending", "Completed", "Cancelled"]).required(),
     grandTotal: Yup.number().typeError("Must be a number").required("Total is required"),
-  }), [existingCustomers]);
+  }), [customers]);
 
   // --- FORMIK ---
   const formik = useFormik<OrderFormValues>({
@@ -134,10 +133,10 @@ const Orders = () => {
       phoneNumber: editingItem?.customer?.phoneNumber ?? "",
       address: editingItem?.customer?.address ?? "",
       items: editingItem?.orderItems?.map(item => ({
-        productId: item.productId,
-        productName: item.product?.name || "Unknown Product",
+        productId: item.id,
+        productName: item?.name || "Unknown Product",
         quantity: item.quantity,
-        sellingPrice: item.sellingPrice
+        sellingPrice: item.totalCostPrice
       })) || [],
       orderDate: editingItem?.orderDate ? new Date(editingItem.orderDate).toISOString().split('T')[0] : "",
       status: (editingItem?.status as any) ?? "Pending",
@@ -145,9 +144,10 @@ const Orders = () => {
     },
     validationSchema: validationSchema,
     onSubmit: async(values, helpers) => {
+      const existingCustomer = customers.find(c => c.name === values.customerName);
       const payload = {
         customer: {
-          customerId: existingCustomers.includes(values.customerName) ? "CHECK_DB_FOR_ID" : null,
+          customerId: existingCustomer ? existingCustomer.id : null,
           name: values.customerName,
           phone: values.phoneNumber,
           address: values.address
@@ -197,18 +197,14 @@ const Orders = () => {
     },
   });
 
-  const isNewCustomer = formik.values.customerName && !existingCustomers.includes(formik.values.customerName);
+  const isNewCustomer = formik.values.customerName && !customers.some(c => c.name === formik.values.customerName);
 
-  // --- AUTO-CALCULATE TOTAL ---
-  useEffect(() => {
-    const calculatedTotal = formik.values.items.reduce((sum, item) => {
+  // --- HELPERS ---
+  const calculateTotal = (items: FormItem[]) => {
+    return items.reduce((sum, item) => {
       return sum + (item.sellingPrice * item.quantity);
     }, 0);
-
-    if (Math.abs(calculatedTotal - Number(formik.values.grandTotal)) > 0.01) {
-      formik.setFieldValue("grandTotal", calculatedTotal);
-    }
-  }, [formik.values.items]);
+  };
 
   // --- PRODUCT ADDER LOGIC ---
   const handleAddItem = () => {
@@ -226,6 +222,7 @@ const Orders = () => {
 
     const updatedItems = [...formik.values.items, newItem];
     formik.setFieldValue("items", updatedItems);
+    formik.setFieldValue("grandTotal", calculateTotal(updatedItems));
     setCurrentProduct(null);
     setCurrentQty("1");
   };
@@ -233,10 +230,11 @@ const Orders = () => {
   const handleRemoveItem = (index: number) => {
     const updatedItems = formik.values.items.filter((_, i) => i !== index);
     formik.setFieldValue("items", updatedItems);
+    formik.setFieldValue("grandTotal", calculateTotal(updatedItems));
   };
 
   // --- TABLE LOGIC ---
-  const filteredItems = orders.filter((order) => {
+  const filteredItems = (orders || []).filter((order) => {
     if (statusFilter && order.status !== statusFilter) return false;
     if (customerFilter && !order.customerName.toLowerCase().includes(customerFilter.toLowerCase())) return false;
     if (dateFilter && new Date(order.orderDate).toISOString().split('T')[0] !== dateFilter) return false;
@@ -273,33 +271,95 @@ const Orders = () => {
       id: "actions",
       cell: ({ row }) => (
         <div className="flex items-center space-x-2">
-          <button onClick={() => { setEditingItem(row.original); handleOpen(); }} className="text-gray-500 hover:text-blue-600 p-1.5 rounded-full hover:bg-blue-50">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L8.25 19.04 4 20l.96-4.25 11.902-11.263Z" /></svg>
-          </button>
-          <button onClick={() => { dispatch(deleteOrder(row.original.id)); toast.success("Deleted"); }} className="text-gray-500 hover:text-red-600 p-1.5 rounded-full hover:bg-red-50">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M10 11v6m4-6v6M9 4h6a1 1 0 0 1 1 1v2H8V5a1 1 0 0 1 1-1Zm-1 4h8l-.6 11.2A1 1 0 0 1 14.4 20H9.6a1 1 0 0 1-.998-.8L8 8Z" /></svg>
-          </button>
+            <Button
+              type="button"
+              title="Edit"
+              variant="ghost"
+              onClick={() => { setEditingItem(row.original); handleOpen(); }}
+              className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
+              style={{ color: theme.textMuted }}
+            >
+              <svg
+                className="w-4 h-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L8.25 19.04 4 20l.96-4.25 11.902-11.263Z"
+                />
+              </svg>
+            </Button>
+            <Button
+              type="button"
+              title="Delete"
+              variant="ghost"
+              onClick={() => { dispatch(deleteOrder(row.original.id)); toast.success("Deleted"); }}
+              className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
+              style={{ color: theme.secondary }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+              </svg>
+            </Button>
         </div>
       ),
     },
   ];
 
-  console.log("orders", orders);
+  console.log("orders", orders, customers);
   // --- LOAD INITIAL DATA ---
+
+  const loadInitialData = async() => {
+    setLoading(true);
+    const [orderRes, productRes, customerRes] = await Promise.all([
+      getOrders(),
+      getProducts(),
+      getCustomers(),
+    ]);
+
+    console.log("orderRes", orderRes);
+
+    if (orderRes.status === 200) {
+      const mappedOrders: OrderItem[] = Array.isArray(orderRes.data) ? orderRes.data.map((data: any) => ({
+        id: data.id,
+        productIds: data.orderItems?.map((i: any) => i.productId) || [],
+        orderItems: data.orderItems?.map((i: any) => i.product) || [],
+        customerName: data.customerName,
+        phoneNumber: data.customer?.phone,
+        address: data.customer?.address,
+        orderDate: data.orderDate,
+        status: data.status,
+        grandTotal: data.grandTotal,
+      })) : [];
+      dispatch(setOrders(mappedOrders));
+    }
+    if (productRes.status === 200) dispatch(setRecipes(productRes.data));
+    if (customerRes.status === 200) dispatch(setCustomers(customerRes.data));
+    setLoading(false);
+  }
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const productRes = await getProducts();
-        if (productRes.status === 200) dispatch(setRecipes(productRes.data));
-      } catch (e) {
-        console.error(e);
-      }
-      setLoading(false);
-    };
-    loadData();
+    loadInitialData();
   }, [dispatch]);
 
+  console.log("formik.values", formik.values);
   return (
     <div>
       <div className="relative">
@@ -378,7 +438,7 @@ const Orders = () => {
                         <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Customer Details</h3>
                         <Autocomplete
                           freeSolo
-                          options={existingCustomers}
+                          options={customers.map(c => c.name)}
                           value={formik.values.customerName}
                           onInputChange={(e, newInputValue) => formik.setFieldValue("customerName", newInputValue)}
                           renderInput={(params) => (
