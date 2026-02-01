@@ -16,9 +16,12 @@ import { useAuth } from "../../../features/auth/authContext";
 import { getProducts } from "../../../api/products";
 import { setRecipes } from "../../../store/slices/recipesSlice";
 import Loader from "../../../components/Loader";
-import { createOrder, getOrders } from "../../../api/orders";
+import { createOrder, deleteOrderById, getOrders, updateOrderById } from "../../../api/orders";
 import { getCustomers } from "../../../api/customers";
 import { setCustomers } from "../../../store/slices/customerSlice";
+import ConfirmationModal from "../../../components/ConfirmationModal";
+
+import { formatDate } from "../../../utils/dateUtils";
 
 // --- TYPES ---
 type FormItem = {
@@ -65,6 +68,8 @@ const Orders = () => {
   const [mounted, setMounted] = useState(false);
   const [editingItem, setEditingItem] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Product Adder State
   const [currentProduct, setCurrentProduct] = useState<any | null>(null);
@@ -126,6 +131,7 @@ const Orders = () => {
   }), [customers]);
 
   // --- FORMIK ---
+  console.log("editingItem", editingItem);
   const formik = useFormik<OrderFormValues>({
     enableReinitialize: true,
     initialValues: {
@@ -133,10 +139,10 @@ const Orders = () => {
       phoneNumber: editingItem?.customer?.phoneNumber ?? "",
       address: editingItem?.customer?.address ?? "",
       items: editingItem?.orderItems?.map(item => ({
-        productId: item.id,
-        productName: item?.name || "Unknown Product",
+        productId: item.product.id,
+        productName: item.product?.name || "Unknown Product",
         quantity: item.quantity,
-        sellingPrice: item.totalCostPrice
+        sellingPrice: item.sellingPrice
       })) || [],
       orderDate: editingItem?.orderDate ? new Date(editingItem.orderDate).toISOString().split('T')[0] : "",
       status: (editingItem?.status as any) ?? "Pending",
@@ -165,8 +171,24 @@ const Orders = () => {
       console.log("payloadpayload", payload);
       setLoading(true);
       if (editingItem) {
-        dispatch(updateOrder({ id: editingItem.id, ...payload }));
-        toast.success("Order updated");
+        const {status, message, data} = await updateOrderById(payload, editingItem.id);
+        if (status === 200) {
+          const mappedOrder: OrderItem = {
+            id: data.id,
+            productIds: data.orderItems?.map((i: any) => i.productId),
+            orderItems: data?.orderItems,
+            customerName: data.customerName,
+            phoneNumber: data.customer?.phone,
+            address: data.customer?.address,
+            orderDate: data.orderDate,
+            status: data.status,
+            grandTotal: data.grandTotal,
+          };
+          dispatch(updateOrder({ id: editingItem.id, ...mappedOrder }));
+          toast.success("Order updated");
+        } else {
+          toast.error(message || "Failed to update order");
+        }
       } else {
         const {status, message, data} = await createOrder(payload);
         console.log("status", status);
@@ -176,7 +198,7 @@ const Orders = () => {
           const mappedOrder: OrderItem = {
             id: data.id,
             productIds: data.orderItems.map((i: any) => i.productId),
-            products: data.orderItems.map((i: any) => i.product),
+            orderItems: data.orderItems,
             customerName: data.customerName,
             phoneNumber: data.customer?.phone,
             address: data.customer?.address,
@@ -241,12 +263,34 @@ const Orders = () => {
     return true;
   });
 
+  const handleDeleteClick = (id: string) => {
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+    setLoading(true);
+    const {status, message} = await deleteOrderById(deleteId);
+    console.log("status", status);
+    console.log("message", message);
+    if (status === 200) {
+      dispatch(deleteOrder(deleteId));
+      toast.success("Order deleted");
+    } else {
+      toast.error(message || "Failed to delete order");
+    }
+    setLoading(false);
+    setDeleteModalOpen(false);
+    setDeleteId(null);
+  };
+
   const columns: ColumnDef<Order, unknown>[] = [
     { header: "Customer", accessorKey: "customerName" },
     {
       header: "Date",
       accessorKey: "orderDate",
-      cell: ({ getValue }) => new Date(getValue() as string).toLocaleDateString()
+      cell: ({ getValue }) => formatDate(getValue() as string)
     },
     {
       header: "Status",
@@ -298,7 +342,7 @@ const Orders = () => {
               type="button"
               title="Delete"
               variant="ghost"
-              onClick={() => { dispatch(deleteOrder(row.original.id)); toast.success("Deleted"); }}
+              onClick={() => handleDeleteClick(row.original.id)}
               className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
               style={{ color: theme.secondary }}
             >
@@ -336,12 +380,13 @@ const Orders = () => {
     ]);
 
     console.log("orderRes", orderRes);
+    
 
     if (orderRes.status === 200) {
       const mappedOrders: OrderItem[] = Array.isArray(orderRes.data) ? orderRes.data.map((data: any) => ({
         id: data.id,
         productIds: data.orderItems?.map((i: any) => i.productId) || [],
-        orderItems: data.orderItems?.map((i: any) => i.product) || [],
+        orderItems: data.orderItems || [],
         customerName: data.customerName,
         phoneNumber: data.customer?.phone,
         address: data.customer?.address,
@@ -397,9 +442,21 @@ const Orders = () => {
         </div>
 
         {/* TABLE */}
-        {loading && <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]"><Loader /></div>}
-        <DataTable columns={columns} data={filteredItems} isLoading={loading} />
+        {loading && !deleteModalOpen && <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]"><Loader /></div>}
+        <DataTable columns={columns} data={filteredItems} isLoading={loading && !deleteModalOpen} />
       </div>
+
+      <ConfirmationModal
+        open={deleteModalOpen}
+        onClose={() => !loading && setDeleteModalOpen(false)}
+        title="Delete Order"
+        description="Are you sure you want to delete this order? This action cannot be undone."
+        primaryActionLabel="Delete"
+        secondaryActionLabel="Cancel"
+        onPrimaryAction={handleConfirmDelete}
+        primaryVariant="danger"
+        isLoading={loading}
+      />
 
       {/* --- SIDE DRAWER --- */}
       {mounted && (
@@ -599,8 +656,8 @@ const Orders = () => {
 
                   {/* 3. Footer */}
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 flex-shrink-0">
-                    <Button type="button" fullWidth={false} onClick={handleClose} variant="secondary" className="px-6">Cancel</Button>
-                    <Button type="submit" fullWidth={false} disabled={formik.values.items.length === 0} variant="primary" className="px-8 shadow-lg shadow-indigo-200">
+                    <Button type="button" fullWidth={false} onClick={handleClose} variant="secondary" disabled={loading} className="px-6">Cancel</Button>
+                    <Button type="submit" fullWidth={false} disabled={formik.values.items.length === 0 || loading} variant="primary" loading={loading} className="px-8 shadow-lg shadow-indigo-200">
                       {editingItem ? "Save Changes" : "Create Order"}
                     </Button>
                   </div>

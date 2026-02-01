@@ -107,18 +107,59 @@ export const getOrderById = async (req: Request, res: Response) => {
 
 export const updateOrder = async (req: Request, res: Response) => {
     try {
+        const { customer, status, orderDate, grandTotal, items } = req.body;
+        
+        const { name, phone, address, customerId } = customer;
+
+        let customerResp;
+
+        if (!customerId) {
+            customerResp = await prisma.customer.create({
+                data: { name, phone, address },
+            });
+        } else {
+            customerResp = { id: customerId };
+        }
+
         const order = await prisma.order.update({
             where: {
                 id: req.params.id,
             },
-            data: req.body,
+            data: {
+                customerName: name,
+                grandTotal: Number(grandTotal),
+                status: status || "Pending",
+                orderDate: new Date(orderDate),
+                
+                customer: {
+                    connect: { id: customerResp.id }
+                },
+
+                orderItems: {
+                    deleteMany: {}, 
+                    create: items.map((item: any) => ({
+                        product: { connect: { id: item.productId } },
+                        quantity: Number(item.quantity),
+                        sellingPrice: Number(item.sellingPrice)
+                    }))
+                }
+            },
+            include: {
+                orderItems: {
+                    include: { product: true }
+                },
+                customer: true
+            }
         });
+
         return res.status(200).json({
             message: 'Order updated successfully',
             status: 200,
             data: order,
         });
-    } catch (error) {
+
+    } catch (error: any) {
+        console.error("Error updating order:", error);
         return res.status(400).json({
             message: 'Error updating order',
             status: 400,

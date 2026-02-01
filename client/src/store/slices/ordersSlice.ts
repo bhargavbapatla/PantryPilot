@@ -6,7 +6,7 @@ export type OrderStatus = 'Pending' | 'Completed' | 'Cancelled';
 export interface OrderItem {
   id: string;
   productIds: string[];
-  products?: RecipeItem[];
+  orderItems?: any[];
   customerName: string;
   phoneNumber?: string;
   address?: string;
