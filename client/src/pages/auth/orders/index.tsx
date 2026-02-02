@@ -18,7 +18,7 @@ import { setRecipes } from "../../../store/slices/recipesSlice";
 import Loader from "../../../components/Loader";
 import { createOrder, deleteOrderById, getOrders, updateOrderById } from "../../../api/orders";
 import { getCustomers } from "../../../api/customers";
-import { setCustomers } from "../../../store/slices/customerSlice";
+import { addCustomer, setCustomers } from "../../../store/slices/customerSlice";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 
 import { formatDate } from "../../../utils/dateUtils";
@@ -64,6 +64,12 @@ const Orders = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [customerFilter, setCustomerFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+
+  const resetFilters = () => {
+    setStatusFilter("");
+    setCustomerFilter("");
+    setDateFilter("");
+  };
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [editingItem, setEditingItem] = useState<Order | null>(null);
@@ -185,7 +191,15 @@ const Orders = () => {
             grandTotal: data.grandTotal,
           };
           dispatch(updateOrder({ id: editingItem.id, ...mappedOrder }));
-          toast.success("Order updated");
+          toast.success(message || "Order updated");
+          if (isNewCustomer) {
+            dispatch(addCustomer({
+              id: data.customer.id,
+              name: data.customerName,
+              phone: data.customer?.phone,
+              address: data.customer?.address,
+            }));
+          }
         } else {
           toast.error(message || "Failed to update order");
         }
@@ -207,7 +221,16 @@ const Orders = () => {
             grandTotal: data.grandTotal,
           };
           dispatch(addOrder(mappedOrder));
-          toast.success("Order added");
+          console.log("isNewCustomer", isNewCustomer);
+          if (isNewCustomer) {
+            dispatch(addCustomer({
+              id: data.customer.id,
+              name: data.customerName,
+              phone: data.customer?.phone,
+              address: data.customer?.address,
+            }));
+          }
+          toast.success(message || "Order added");
         } else {
           toast.error(message || "Failed to add order");
         }
@@ -218,6 +241,14 @@ const Orders = () => {
       handleClose();
     },
   });
+//   {
+//     "id": "3017c268-3866-415b-ad01-0ba361a9b618",
+//     "name": "dash",
+//     "email": null,
+//     "phone": "08805601979",
+//     "address": "E-903,BRAMHA EXUBERANCE,NIBM ROAD,PUNE",
+//     "createdAt": "2026-02-02T07:06:29.448Z"
+// }
 
   const isNewCustomer = formik.values.customerName && !customers.some(c => c.name === formik.values.customerName);
 
@@ -299,9 +330,9 @@ const Orders = () => {
         const value = row.original.status;
         const baseClasses = "inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium";
         let colorClasses = "";
-        if (value === "Pending") colorClasses = "bg-yellow-100 text-yellow-800";
-        else if (value === "Cancelled") colorClasses = "bg-red-100 text-red-800";
-        else if (value === "Completed") colorClasses = "bg-green-100 text-green-800";
+        if (value === "Pending") colorClasses = "bg-[#F0F1FA] text-[#4F5AED]";
+        else if (value === "Cancelled") colorClasses = "bg-[#FAF0F3] text-[#D12953]";
+        else if (value === "Completed") colorClasses = "bg-[#E1FCEF] text-[#14804A]";
         return <span className={`${baseClasses} ${colorClasses}`}>{value}</span>;
       },
     },
@@ -314,54 +345,55 @@ const Orders = () => {
       header: "Actions",
       id: "actions",
       cell: ({ row }) => (
-        <div className="flex items-center space-x-2">
+        // Changed "space-x-2" to "gap-1"
+        <div className="flex items-center gap-1"> 
             <Button
               type="button"
               title="Edit"
               variant="ghost"
               onClick={() => { setEditingItem(row.original); handleOpen(); }}
-              className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
+              className="cursor-pointer inline-flex items-center justify-center rounded-full p-1.5 transition-colors hover:bg-gray-100"
               style={{ color: theme.textMuted }}
             >
-              <svg
-                className="w-4 h-4"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L8.25 19.04 4 20l.96-4.25 11.902-11.263Z"
-                />
-              </svg>
+               <svg
+                 className="w-4 h-4"
+                 xmlns="http://www.w3.org/2000/svg"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke="currentColor"
+                 strokeWidth="1.8"
+               >
+                 <path
+                   strokeLinecap="round"
+                   strokeLinejoin="round"
+                   d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L8.25 19.04 4 20l.96-4.25 11.902-11.263Z"
+                 />
+               </svg>
             </Button>
             <Button
               type="button"
               title="Delete"
               variant="ghost"
               onClick={() => handleDeleteClick(row.original.id)}
-              className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
+              className="cursor-pointer inline-flex items-center justify-center rounded-full p-1.5 transition-colors hover:bg-red-50"
               style={{ color: theme.secondary }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 6h18" />
-                <path d="M8 6V4h8v2" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                <path d="M10 11v6" />
-                <path d="M14 11v6" />
-              </svg>
+               <svg
+                 xmlns="http://www.w3.org/2000/svg"
+                 className="w-4 h-4"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 strokeWidth="1.5"
+                 strokeLinecap="round"
+                 strokeLinejoin="round"
+               >
+                 <path d="M3 6h18" />
+                 <path d="M8 6V4h8v2" />
+                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                 <path d="M10 11v6" />
+                 <path d="M14 11v6" />
+               </svg>
             </Button>
         </div>
       ),
@@ -418,8 +450,17 @@ const Orders = () => {
 
         {/* FILTERS */}
         <div className="mb-4 rounded-lg border shadow-sm" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
-          <div className="px-4 py-2 border-b" style={{ borderColor: theme.border, backgroundColor: theme.surfaceAlt }}>
+          <div className="px-4 py-2 border-b flex justify-between items-center" style={{ borderColor: theme.border, backgroundColor: theme.surfaceAlt }}>
             <h3 className="text-lg font-semibold" style={{ color: theme.text }}>Filters</h3>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={resetFilters}
+              className="text-xs px-2 py-1 h-auto"
+              disabled={!statusFilter && !customerFilter && !dateFilter}
+            >
+              Reset Filters
+            </Button>
           </div>
           <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-3 gap-3">
             <TextField label="Customer Name" name="customerFilter" value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)} placeholder="Search customer" containerClassName="w-full" />
@@ -440,6 +481,7 @@ const Orders = () => {
             </div>
           </div>
         </div>
+        
 
         {/* TABLE */}
         {loading && !deleteModalOpen && <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-[1px]"><Loader /></div>}
