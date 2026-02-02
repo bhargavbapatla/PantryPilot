@@ -8,7 +8,7 @@ export const createOrder = async (req: Request, res: Response) => {
         const { customer, status, orderItems, orderDate, grandTotal, items } = req.body;
         const { name, phone, address, customerId } = customer;
         let customerResp;
-        if (customer.id) {
+        if (customerId) {
             customerResp = await prisma.customer.findUnique({
                 where: {
                     id: customerId,
