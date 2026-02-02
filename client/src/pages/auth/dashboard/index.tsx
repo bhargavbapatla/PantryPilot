@@ -1,24 +1,38 @@
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import EChart from "../../../components/charts/EChart";
 import { useAuth } from "../../../features/auth/authContext";
+// 1. Import Framer Motion hooks
+import { motion, useSpring, useTransform } from "framer-motion";
+
+// 2. Create the Reusable Counter Component
+function Counter({ value, prefix = "" }: { value: number; prefix?: string }) {
+  const spring = useSpring(0, { bounce: 0, duration: 2000 });
+  const display = useTransform(spring, (current) => 
+    prefix + Math.round(current).toLocaleString() // Adds commas (e.g., 1,234)
+  );
+
+  useEffect(() => {
+    spring.set(value);
+  }, [spring, value]);
+
+  return <motion.span>{display}</motion.span>;
+}
 
 const Dashboard = () => {
   const { theme } = useAuth();
 
+  // 3. Update stats to use Numbers (int) instead of Strings
   const stats = [
-    { title: "Total Items", value: "1,234", color: theme.primary },
-    { title: "Low Stock", value: "12", color: theme.secondary },
-    { title: "Total Value", value: "$45,678", color: theme.neutral },
-    { title: "Pending Orders", value: "5", color: theme.secondary },
+    { title: "Total Items", value: 1234, color: theme.primary },
+    { title: "Low Stock", value: 12, color: theme.secondary },
+    { title: "Total Value", value: 45678, prefix: "$", color: theme.neutral },
+    { title: "Pending Orders", value: 5, color: theme.secondary },
   ];
 
   const recentActivity = [
     { id: 1, action: 'Added new item "Wireless Mouse"', time: "2 hours ago" },
-    {
-      id: 2,
-      action: 'Updated stock for "Mechanical Keyboard"',
-      time: "4 hours ago",
-    },
+    { id: 2, action: 'Updated stock for "Mechanical Keyboard"', time: "4 hours ago" },
     { id: 3, action: 'Low stock alert: "USB-C Cable"', time: "5 hours ago" },
     { id: 4, action: 'Removed item "Old Monitor"', time: "1 day ago" },
   ];
@@ -45,8 +59,6 @@ const Dashboard = () => {
               Welcome back to your inventory overview.
             </p>
           </div>
-          <div className="space-x-4">
-          </div>
         </header>
 
         {/* Stats Grid */}
@@ -68,12 +80,15 @@ const Dashboard = () => {
                   >
                     {stat.title}
                   </p>
+                  
+                  {/* 4. Use the Counter Component here */}
                   <p
                     className="mt-1 text-2xl font-semibold"
                     style={{ color: theme.text }}
                   >
-                    {stat.value}
+                    <Counter value={stat.value} prefix={stat.prefix} />
                   </p>
+                  
                 </div>
                 <div
                   className="w-3 h-3 rounded-full"
@@ -292,24 +307,6 @@ const Dashboard = () => {
               </Link>
             </div>
           </div>
-
-          {/* Quick Links or Another Widget */}
-          {/* <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              <button className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition text-gray-700 font-medium border border-gray-200">
-                Create New Order
-              </button>
-              <button className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition text-gray-700 font-medium border border-gray-200">
-                Generate Report
-              </button>
-              <button className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition text-gray-700 font-medium border border-gray-200">
-                Manage Users
-              </button>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>

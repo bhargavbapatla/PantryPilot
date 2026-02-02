@@ -455,6 +455,7 @@ const Recipes = () => {
         anchor="right"
         open={open}
         onClose={handleClose}
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
         PaperProps={{
           sx: { width: { xs: "100%", sm: 600 } },
         }}

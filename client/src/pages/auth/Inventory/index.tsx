@@ -340,7 +340,7 @@ const Inventory = () => {
       />
 
       {mounted && (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center ${open ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-out`}>
+        <div className={`fixed inset-0 z-[1300] flex items-center justify-center ${open ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-out`}>
           <div
             className={`absolute inset-0 bg-black/40 ${open ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}
             onClick={handleClose}

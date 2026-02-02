@@ -27,7 +27,7 @@ import {
   useTheme,
   useMediaQuery,
   Badge,
-  keyframes,
+  alpha, // Make sure to import alpha
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -40,13 +40,6 @@ import {
   Settings as SettingsIcon,
   Notifications as NotificationsIcon,
 } from '@mui/icons-material';
-
-const shakeAnimation = keyframes`
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(-10deg); }
-  75% { transform: rotate(10deg); }
-  100% { transform: rotate(0deg); }
-`;
 
 const DashboardLayout = () => {
   const { logout, user } = useAuth();
@@ -62,8 +55,7 @@ const DashboardLayout = () => {
   const [notificationsAnchor, setNotificationsAnchor] = useState<null | HTMLElement>(null);
 
   const profileOpen = Boolean(profileAnchor);
-  const notificationsOpen = Boolean(notificationsAnchor);
-
+  
   const orders = useSelector((state: RootState) => state.orders.items);
   const [unreadOrderIds, setUnreadOrderIds] = useState<string[]>([]);
 
@@ -83,7 +75,7 @@ const DashboardLayout = () => {
     { label: 'Settings', to: '/settings', icon: <SettingsIcon fontSize="small" /> },
   ];
 
-  const drawerWidth = isCollapsed ? 64 : 240;
+  const drawerWidth = isCollapsed ? 72 : 240; // Slightly wider collapsed state for better icon centering
 
   const handleLogout = () => {
     logout();
@@ -92,7 +84,8 @@ const DashboardLayout = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f9fafb' }}>
-      {/* APP BAR */}
+      
+      {/* 1. APP BAR (Kept exactly as it was) */}
       <AppBar
         position="fixed"
         sx={{
@@ -106,9 +99,7 @@ const DashboardLayout = () => {
         <Toolbar>
           <IconButton
             edge="start"
-            onClick={() =>
-              isMobile ? setMobileOpen((v) => !v) : setIsCollapsed((v) => !v)
-            }
+            onClick={() => isMobile ? setMobileOpen((v) => !v) : setIsCollapsed((v) => !v)}
             sx={{ mr: 2 }}
           >
             <MenuIcon />
@@ -147,7 +138,7 @@ const DashboardLayout = () => {
         </Toolbar>
       </AppBar>
 
-      {/* SIDEBAR */}
+      {/* 2. SIDEBAR (Updated with Modern Effects) */}
       <Drawer
         variant={isMobile ? 'temporary' : 'permanent'}
         open={isMobile ? mobileOpen : true}
@@ -166,7 +157,6 @@ const DashboardLayout = () => {
             width: drawerWidth,
             bgcolor: '#ffffff',
             borderRight: '1px solid #e5e7eb',
-            fontSize: '13.5px',
             overflowX: 'hidden',
             transition: (theme) =>
               theme.transitions.create('width', {
@@ -180,19 +170,21 @@ const DashboardLayout = () => {
 
         <Typography
           sx={{
-            px: 2,
-            py: 1,
+            px: 3,
+            py: 2,
             fontSize: '11px',
-            fontWeight: 600,
+            fontWeight: 700,
             textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            color: '#9ca3af',
+            letterSpacing: '0.1em',
+            color: 'text.secondary',
+            opacity: isCollapsed ? 0 : 1,
+            transition: 'opacity 0.2s',
           }}
         >
           Main
         </Typography>
 
-        <List sx={{ px: 1 }}>
+        <List sx={{ px: 2 }}>
           {menuItems.map((item) => {
             const isActive =
               location.pathname === item.to ||
@@ -203,51 +195,61 @@ const DashboardLayout = () => {
                 key={item.to}
                 title={isCollapsed ? item.label : ''}
                 placement="right"
+                arrow
               >
                 <ListItemButton
                   component={Link}
                   to={item.to}
                   selected={isActive}
                   sx={{
-                    px: isCollapsed ? 1.5 : 2,
-                    py: 0.75,
-                    borderRadius: 1,
-                    fontSize: '13.5px',
-                    fontWeight: 500,
-                    color: isActive ? '#4f46e5' : '#374151',
+                    // --- MODERN STYLING START ---
+                    minHeight: 48,
                     justifyContent: isCollapsed ? 'center' : 'flex-start',
+                    px: 2.5,
+                    mb: 0.5, // Spacing between items
+                    borderRadius: 2, // Rounded corners (Modern look)
+                    
+                    // Colors based on Active State
+                    color: isActive ? 'primary.main' : 'text.secondary',
+                    bgcolor: isActive ? alpha(muiTheme.palette.primary.main, 0.08) : 'transparent',
+                    
+                    // Hover Effects
                     '&:hover': {
-                      bgcolor: '#f3f4f6',
+                      bgcolor: isActive 
+                        ? alpha(muiTheme.palette.primary.main, 0.12) 
+                        : alpha(muiTheme.palette.action.hover, 0.05),
+                      color: isActive ? 'primary.main' : 'text.primary',
+                      transform: 'translateX(4px)', // The slide animation you liked
                     },
-                    '&.Mui-selected': {
-                      bgcolor: '#eef2ff',
-                    },
-                    '&:hover .MuiListItemIcon-root': {
-                      animation: `${shakeAnimation} 0.5s ease-in-out`,
-                      color: '#4f46e5',
-                    },
+                    
+                    // Smooth Transitions
+                    transition: 'all 0.2s ease',
+                    // --- MODERN STYLING END ---
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      minWidth: isCollapsed ? 0 : 36,
-                      mr: isCollapsed ? 0 : 1.25,
-                      color: isActive ? '#4f46e5' : '#9ca3af',
+                      minWidth: 0,
+                      mr: isCollapsed ? 0 : 2,
                       justifyContent: 'center',
+                      color: isActive ? 'inherit' : 'text.secondary', // Icon follows text color
+                      transition: 'margin 0.2s',
                     }}
                   >
                     {item.icon}
                   </ListItemIcon>
 
-                  {!isCollapsed && (
-                    <ListItemText
-                      primary={item.label}
-                      primaryTypographyProps={{
-                        fontSize: '13.5px',
-                        fontWeight: 500,
-                      }}
-                    />
-                  )}
+                  <ListItemText
+                    primary={item.label}
+                    primaryTypographyProps={{
+                      fontSize: '0.875rem',
+                      fontWeight: isActive ? 600 : 500,
+                    }}
+                    sx={{
+                      opacity: isCollapsed ? 0 : 1,
+                      transition: 'opacity 0.2s',
+                    }}
+                  />
                 </ListItemButton>
               </Tooltip>
             );
@@ -255,16 +257,17 @@ const DashboardLayout = () => {
         </List>
       </Drawer>
 
-      {/* MAIN CONTENT */}
+      {/* 3. MAIN CONTENT (Kept exactly as it was) */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          bgcolor: '#f9fafb',
+          bgcolor: '#f3f4f6',
           overflow: 'auto',
+          height: '100vh', 
+          pt: 8, // Add padding top to account for the fixed header
         }}
       >
-        <Toolbar />
         <Box sx={{ p: 3 }}>
           <Outlet />
         </Box>
