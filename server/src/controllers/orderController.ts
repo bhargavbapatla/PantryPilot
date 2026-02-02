@@ -1,5 +1,6 @@
 import { prisma } from "../config/db.ts";
 import pkg from 'express'
+import { sendOrderConfirmation } from "../services/whatsappService.ts";
 
 const { Request, Response } = pkg;
 
@@ -45,6 +46,15 @@ export const createOrder = async (req: Request, res: Response) => {
                 customer: true
             }
         });
+
+        // 3. Send WhatsApp Confirmation
+        console.log(`Customer phone: ${customer.phone}`);
+        await sendOrderConfirmation(
+            customer.phone, // Customer's phone number
+            customer.name,  // Customer's name
+            Number(grandTotal), // Total amount
+            newOrder.id // Order ID
+        );
 
         return res.status(200).json({
             message: 'Order created successfully',
@@ -152,6 +162,12 @@ export const updateOrder = async (req: Request, res: Response) => {
             }
         });
 
+         await sendOrderConfirmation(
+            customer.phone,
+            customer.name,
+            Number(grandTotal),
+            order.id 
+        );
         return res.status(200).json({
             message: 'Order updated successfully',
             status: 200,
