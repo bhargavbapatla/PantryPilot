@@ -5,3 +5,4 @@ export const Inventory = '/inventory';
 export const Product = '/products';
 export const orders = '/orders';
 export const customer = '/customers';
+export const ai = '/ai';

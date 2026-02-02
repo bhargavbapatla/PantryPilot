@@ -11,7 +11,7 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.ts';
 import orderRouter from './routes/orderRoutes.ts';
 import customerRouter from './routes/customerRouters.ts';
-
+import aiRouter from './routes/aiRoutes.ts';
 config();
 connectDB();
 
@@ -31,6 +31,7 @@ app.use('/dashboard', dashboardRouter);
 app.use('/orders', orderRouter);
 app.use('/products', productRouter);
 app.use('/customers', customerRouter);
+app.use('/ai', aiRouter);
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');
