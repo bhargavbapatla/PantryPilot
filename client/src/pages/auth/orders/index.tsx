@@ -157,6 +157,7 @@ const Orders = () => {
     validationSchema: validationSchema,
     onSubmit: async(values, helpers) => {
       const existingCustomer = customers.find(c => c.name === values.customerName);
+      console.log("existingCustomer", values, existingCustomer);
       const payload = {
         customer: {
           customerId: existingCustomer ? existingCustomer.id : null,
@@ -403,6 +404,13 @@ const Orders = () => {
   console.log("orders", orders, customers);
   // --- LOAD INITIAL DATA ---
 
+  const handleCustomerChange = (newInputValue: string) => {
+    const existingCustomer = customers.find(c => c.name === newInputValue);
+    formik.setFieldValue("customerName", newInputValue)
+    formik.setFieldValue("address", existingCustomer ? existingCustomer.address : "");
+    formik.setFieldValue("phoneNumber", existingCustomer ? existingCustomer.phone : "");
+  }
+
   const loadInitialData = async() => {
     setLoading(true);
     const [orderRes, productRes, customerRes] = await Promise.all([
@@ -539,7 +547,7 @@ const Orders = () => {
                           freeSolo
                           options={customers.map(c => c.name)}
                           value={formik.values.customerName}
-                          onInputChange={(e, newInputValue) => formik.setFieldValue("customerName", newInputValue)}
+                          onInputChange={(e, newInputValue) => handleCustomerChange(newInputValue)}
                           renderInput={(params) => (
                             <MuiTextField {...params} label="Customer Name" name="customerName"
                               error={formik.touched.customerName && Boolean(formik.errors.customerName)}
