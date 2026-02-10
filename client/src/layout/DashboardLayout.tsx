@@ -70,8 +70,8 @@ const DashboardLayout = () => {
     { label: 'Dashboard', to: '/dashboard', icon: <DashboardIcon fontSize="small" /> },
     { label: 'Inventory', to: '/inventory', icon: <InventoryIcon fontSize="small" /> },
     { label: 'Recipes', to: '/recipes', icon: <RecipesIcon fontSize="small" /> },
-    { label: 'Orders', to: '/dashboard/orders', icon: <OrdersIcon fontSize="small" /> },
-    { label: 'Reports & Analysis', to: '/dashboard/reports', icon: <ReportsIcon fontSize="small" /> },
+    { label: 'Orders', to: '/orders', icon: <OrdersIcon fontSize="small" /> },
+    { label: 'Reports & Analysis', to: '/reports', icon: <ReportsIcon fontSize="small" /> },
     { label: 'Settings', to: '/settings', icon: <SettingsIcon fontSize="small" /> },
   ];
 
