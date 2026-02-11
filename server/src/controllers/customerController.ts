@@ -80,6 +80,23 @@ export const updateCustomer = async (req: Request, res: Response) => {
 
 export const deleteCustomer = async (req: Request, res: Response) => {
     try {
+        const activeOrder = await prisma.order.findFirst({
+            where: {
+                customerId: req.params.id,
+                status: {
+                    in: ["PENDING", "ONGOING"], // Add any statuses that should block deletion
+                },
+            },
+        });
+
+        // 2. If an active order is found, block the deletion
+        if (activeOrder) {
+            return res.status(400).json({
+                message: "Cannot delete this customer because they have active orders in progress.",
+                status: 400,
+            });
+        }
+
         const customer = await prisma.customer.delete({
             where: {
                 id: req.params.id,
