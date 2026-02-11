@@ -15,6 +15,7 @@ export interface RecipeItem {
   makingCharge: number;
   description: string;
   ingredients: RecipeIngredient[];
+  totalCostPrice: number;
 }
 
 interface RecipesState {

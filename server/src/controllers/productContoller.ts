@@ -5,23 +5,23 @@ const { Request, Response } = pkg;
 
 export const getAllProducts = async (req: Request, res: Response) => {
     const products = await prisma.product.findMany({
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      name: true,
-      totalCostPrice: true,
-      makingCharge: true,
-      ingredients: {
+        orderBy: { createdAt: 'desc' },
         select: {
-          inventory: {
-            select: {
-              name: true 
+            id: true,
+            name: true,
+            totalCostPrice: true,
+            makingCharge: true,
+            ingredients: {
+                select: {
+                    inventory: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
             }
-          }
         }
-      }
-    }
-  });
+    });
     return res.status(200).json({
         message: 'Products fetched successfully',
         status: 200,
@@ -77,19 +77,40 @@ export const createProduct = async (req: Request, res: Response) => {
 
         let totalIngredientsCost = 0;
 
-        // Calculate total cost from ingredients
         if (ingredients && Array.isArray(ingredients)) {
             for (const item of ingredients) {
                 if (item.inventoryId) {
                     const inventoryItem = await prisma.inventory.findUnique({
                         where: { id: item.inventoryId }
                     });
-                    console.log("inventoryIteminventoryItem", inventoryItem);
-                    if (inventoryItem) {
-                        const totalWeightInGrams = (inventoryItem.quantity || 0) * getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
-                        const pricePerGram = totalWeightInGrams > 0 ? (inventoryItem.price || 0) / totalWeightInGrams : 0;
-                        totalIngredientsCost += pricePerGram * (item.quantityNeeded || 0);
+
+                    if (!inventoryItem) {
+                        return res.status(404).json({
+                            status: 404,
+                            success: false,
+                            message: "Inventory item not found."
+                        });
                     }
+
+                    const inventoryItemBaseWeightInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
+
+                    const totalAvailableGrams = (inventoryItem.quantity || 0) * inventoryItemBaseWeightInGrams;
+
+                    const quantityNeededInGrams = getWeightInGrams(item.quantityNeeded || 0, item.unit);
+
+                    if (quantityNeededInGrams > totalAvailableGrams) {
+                        return res.status(400).json({
+                            status: 400,
+                            success: false,
+                            message: `Insufficient stock for ${inventoryItem.name}. You need ${quantityNeededInGrams}g, but only have ${totalAvailableGrams}g available.`
+                        });
+                    }
+
+                    const pricePerGram = inventoryItemBaseWeightInGrams > 0
+                        ? (inventoryItem.price || 0) / inventoryItemBaseWeightInGrams
+                        : 0;
+
+                    totalIngredientsCost += pricePerGram * quantityNeededInGrams;
                 }
             }
         }
@@ -147,11 +168,34 @@ export const updateProduct = async (req: Request, res: Response) => {
                     const inventoryItem = await prisma.inventory.findUnique({
                         where: { id: item.inventoryId }
                     });
-                    if (inventoryItem) {
-                        const totalWeightInGrams = (inventoryItem.quantity || 0) * getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
-                        const pricePerGram = totalWeightInGrams > 0 ? (inventoryItem.price || 0) / totalWeightInGrams : 0;
-                        totalIngredientsCost += pricePerGram * (item.quantityNeeded || 0);
+
+                    if (!inventoryItem) {
+                        return res.status(404).json({
+                            status: 404,
+                            success: false,
+                            message: "Inventory item not found."
+                        });
                     }
+
+                    const inventoryItemBaseWeightInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
+
+                    const totalAvailableGrams = (inventoryItem.quantity || 0) * inventoryItemBaseWeightInGrams;
+
+                    const quantityNeededInGrams = getWeightInGrams(item.quantityNeeded || 0, item.unit);
+
+                    if (quantityNeededInGrams > totalAvailableGrams) {
+                        return res.status(400).json({
+                            status: 400,
+                            success: false,
+                            message: `Insufficient stock for ${inventoryItem.name}. You need ${quantityNeededInGrams}g, but only have ${totalAvailableGrams}g available.`
+                        });
+                    }
+
+                    const pricePerGram = inventoryItemBaseWeightInGrams > 0
+                        ? (inventoryItem.price || 0) / inventoryItemBaseWeightInGrams
+                        : 0;
+
+                    totalIngredientsCost += pricePerGram * quantityNeededInGrams;
                 }
             }
         }

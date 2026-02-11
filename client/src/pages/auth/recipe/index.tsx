@@ -22,6 +22,7 @@ const unitToGramsFactor: Record<Unit, number> = {
   KGS: 1000,
   POUNDS: 453.592,
   LITERS: 1000,
+  MILLILITERS: 1,
   PIECES: 1,
 };
 
@@ -279,7 +280,15 @@ const Recipes = () => {
 
   const columns: ColumnDef<RecipeItem, unknown>[] = [
     { header: "Name", accessorKey: "name" },
-    { header: "Making Charge", accessorKey: "makingCharge" },
+    {
+      header: "Total Cost",
+      accessorKey: "totalCostPrice",
+      cell: ({ row }) =>
+        Number(row.original.totalCostPrice ?? 0).toLocaleString('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+        }),
+    },
     {
       header: "Ingredients",
       cell: ({ row }) => row.original.ingredients.length,
@@ -600,22 +609,6 @@ const Recipes = () => {
                       Add Ingredient Row
                     </Button>
                   </div>
-                  <div
-                    className="px-4 py-2 border-b flex items-center justify-between"
-                    style={{
-                      borderColor: theme.border,
-                      backgroundColor: theme.surfaceAlt,
-                    }}
-                  >
-                    <div>
-                      <h3
-                        className="text-lg font-semibold"
-                        style={{ color: theme.text }}
-                      >
-                        Total Cost: {getTotalCost().toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
-                      </h3>
-                    </div>
-                  </div>
                   <div className="px-4 py-3">
                     <div
                       className="overflow-x-auto rounded-lg border"
@@ -793,6 +786,17 @@ const Recipes = () => {
                 </div>
               </div>
               <div
+                className="px-5 py-3 border-t"
+                style={{ borderColor: theme.border, backgroundColor: theme.surfaceAlt }}
+              >
+                <h3
+                  className="text-lg font-semibold"
+                  style={{ color: theme.text }}
+                >
+                  Total Cost: {getTotalCost().toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                </h3>
+              </div>
+              <div
                 className="px-5 py-3 border-t flex items-center justify-end space-x-2"
                 style={{ borderColor: theme.border, backgroundColor: theme.surface }}
               >
@@ -819,3 +823,4 @@ const Recipes = () => {
 };
 
 export default Recipes;
+
