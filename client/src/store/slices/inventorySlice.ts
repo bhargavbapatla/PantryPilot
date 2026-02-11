@@ -1,12 +1,15 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-export type Unit = 'GRAMS' | 'KGS' | 'POUNDS' | 'LITERS' | 'PIECES';
+export type Unit = 'GRAMS' | 'KGS' | 'POUNDS' | 'LITERS' | 'MILLILITERS' | 'PIECES' | 'BOXES';
 
-export type ExpiryUnit = 'days' | 'months' | 'years';
+export type Category = 'INGREDIENTS' | 'PACKAGING';
+
+export type ExpiryUnit = 'DAYS' | 'MONTHS' | 'YEARS';
 
 export interface InventoryItem {
   id?: string;
   name: string;
+  category: Category;
   weight: number;
   unit: Unit;
   quantity: number;
