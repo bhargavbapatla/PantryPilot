@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { type ColumnDef } from "@tanstack/react-table";
 import * as Yup from "yup";
 import { Field, FormikProvider, useFormik } from "formik";
+import { motion, AnimatePresence } from "framer-motion";
 import Button from "../../../components/Button";
 import DataTable from "../../../components/table/DataTable";
 import TextField from "../../../components/TextField";
@@ -21,7 +22,9 @@ const convertToGrams = (weight: number, unit: string) => {
     KGS: 1000,
     POUNDS: 453.592,
     LITERS: 1000,
+    MILLILITERS: 1,
     PIECES: 1,
+    BOXES: 1,
   };
   return weight * (map[unit] || 1);
 };
@@ -54,8 +57,9 @@ const Inventory = () => {
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
+      category: editingItem?.category ?? "INGREDIENTS",
       name: editingItem?.name ?? "",
-      weight: editingItem ? String(editingItem.weight) : "",
+      weight: (editingItem && editingItem.weight !== undefined) ? String(editingItem.weight) : "",
       unit: editingItem?.unit ?? "GRAMS",
       quantity: editingItem ? String(editingItem.quantity) : "",
       price: editingItem?.price ? String(editingItem.price) : "",
@@ -67,10 +71,17 @@ const Inventory = () => {
       expiryUnit: editingItem?.expiryUnit ?? "days",
     },
     validationSchema: Yup.object({
-      name: Yup.string().required("Item name is required"),
-      weight: Yup.number().typeError("Enter a number").positive("Must be positive").required("Weight is required"),
-      unit: Yup.mixed<InventoryItem["unit"]>().oneOf(["GRAMS", "KGS", "POUNDS"]).required("Unit is required"),
-      quantity: Yup.number().typeError("Enter a number").integer("Must be an integer").min(1, "At least 1").required("Quantity is required"),
+        category: Yup.string().oneOf(["INGREDIENTS", "PACKAGING"]).required("Category is required"),
+        name: Yup.string().required("Item name is required"),
+        weight: Yup.number()
+          .typeError("Enter a number")
+          .when(['unit', 'category'], {
+            is: (unit: string, category: string) => unit !== 'BOXES' && category !== 'PACKAGING',
+            then: (schema) => schema.positive("Must be positive").required("Weight is required"),
+            otherwise: (schema) => schema.notRequired(),
+          }),
+        unit: Yup.mixed<InventoryItem["unit"]>().oneOf(["GRAMS", "KGS", "POUNDS", "LITERS", "MILLILITERS", "PIECES", "BOXES"]).required("Unit is required"),
+        quantity: Yup.number().typeError("Enter a number").integer("Must be an integer").min(1, "At least 1").required("Quantity is required"),
       price: Yup.number().typeError("Enter a number").positive("Must be positive").required("Price is required"),
       isLowStockAlert: Yup.boolean(),
       lowStockThreshold: Yup.number().when("isLowStockAlert", {
@@ -107,7 +118,7 @@ const Inventory = () => {
       }),
       expiryUnit: Yup.mixed<InventoryItem["expiryUnit"]>().when("isExpiryAlert", {
         is: true,
-        then: (schema) => schema.oneOf(["days", "months", "years"]).required("Unit is required"),
+        then: (schema) => schema.oneOf(["DAYS", "MONTHS", "YEARS"]).required("Unit is required"),
         otherwise: (schema) => schema.notRequired(),
       }),
     }),
@@ -115,7 +126,8 @@ const Inventory = () => {
       setLoading(true);
       const payload: InventoryItem = {
         name: values.name,
-        weight: Number(values.weight),
+        category: values.category as any,
+        weight: (values.unit === 'BOXES' || values.category === 'PACKAGING') ? 1 : Number(values.weight),
         unit: values.unit as InventoryItem["unit"],
         quantity: Number(values.quantity),
         price: Number(values.price),
@@ -346,7 +358,7 @@ const Inventory = () => {
             onClick={handleClose}
           />
           <div
-            className={`relative w-full max-w-md mx-4 rounded-xl shadow-lg ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transform transition-all duration-200 ease-out`}
+            className={`relative w-full max-w-lg mx-4 rounded-xl shadow-lg ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transform transition-all duration-200 ease-out flex flex-col max-h-[90vh]`}
             role="dialog"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
@@ -357,7 +369,7 @@ const Inventory = () => {
             }}
           >
             <div
-              className="px-5 py-4 border-b"
+              className="px-5 py-4 border-b flex-shrink-0"
               style={{ borderColor: theme.border }}
             >
               <h2
@@ -367,9 +379,42 @@ const Inventory = () => {
                 {editingItem ? "Edit Item" : "Add Item"}
               </h2>
             </div>
-            <form onSubmit={formik.handleSubmit}>
+            <form onSubmit={formik.handleSubmit} className="flex flex-col flex-1 min-h-0">
               <FormikProvider value={formik}>
-                <div className="px-5 py-4 space-y-3">
+                <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1 min-h-0">
+                  <div className="flex flex-col space-y-2 mb-4">
+                    <label className="text-sm font-medium" style={{ color: theme.text }}>
+                      Category<span className="text-red-600 ml-0.5">*</span>
+                    </label>
+                    <div className="flex space-x-6 py-1">
+                      <label className="flex items-center space-x-2 cursor-pointer group">
+                        <div className="relative flex items-center justify-center">
+                          <input
+                            type="radio"
+                            name="category"
+                            value="INGREDIENTS"
+                            checked={formik.values.category === "INGREDIENTS"}
+                            onChange={formik.handleChange}
+                            className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          />
+                        </div>
+                        <span className="text-sm font-medium" style={{ color: theme.text }}>Ingredients</span>
+                      </label>
+                      <label className="flex items-center space-x-2 cursor-pointer group">
+                        <div className="relative flex items-center justify-center">
+                          <input
+                            type="radio"
+                            name="category"
+                            value="PACKAGING"
+                            checked={formik.values.category === "PACKAGING"}
+                            onChange={formik.handleChange}
+                            className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          />
+                        </div>
+                        <span className="text-sm font-medium" style={{ color: theme.text }}>Packaging</span>
+                      </label>
+                    </div>
+                  </div>
                   <Field name="name">
                     {({ field, meta }) => (
                       <TextField
@@ -383,20 +428,22 @@ const Inventory = () => {
                       />
                     )}
                   </Field>
-                  <Field name="weight">
-                    {({ field, meta }) => (
-                      <TextField
-                        label="Weight"
-                        name="weight"
-                        type="number"
-                        value={field.value as string}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        error={meta.touched && meta.error ? meta.error : undefined}
-                        required
-                      />
-                    )}
-                  </Field>
+                  {formik.values.unit !== 'BOXES' && formik.values.category !== 'PACKAGING' && (
+                    <Field name="weight">
+                      {({ field, meta }) => (
+                        <TextField
+                          label="Weight"
+                          name="weight"
+                          type="number"
+                          value={field.value as string}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          error={meta.touched && meta.error ? meta.error : undefined}
+                          required
+                        />
+                      )}
+                    </Field>
+                  )}
                   <Field name="unit">
                     {({ field, meta }) => (
                       <div className="flex flex-col space-y-1">
@@ -408,6 +455,12 @@ const Inventory = () => {
                         </label>
                         <select
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            if (e.target.value === 'BOXES') {
+                              formik.setFieldValue('weight', 1);
+                            }
+                          }}
                           className="w-full px-3 py-2 border rounded-md text-left text-sm outline-none"
                           style={{
                             backgroundColor: theme.surfaceAlt,
@@ -415,11 +468,13 @@ const Inventory = () => {
                             borderColor: theme.border,
                           }}
                         >
-                          <option value="GRAMS">grams</option>
-                          <option value="KGS">kgs</option>
-                          <option value="POUNDS">pounds</option>
-                          <option value="LITERS">liters</option>
+                          <option value="GRAMS">Grams (gms)</option>
+                          <option value="KGS">Kilograms (kgs)</option>
+                          <option value="POUNDS">Pounds (lbs)</option>
+                          <option value="LITERS">Liters (l)</option>
+                          <option value="MILLILITERS">Milliliters (ml)</option>
                           <option value="PIECES">pieces</option>
+                          <option value="BOXES">boxes</option>
                         </select>
                         {meta.touched && meta.error ? (
                           <p className="text-sm text-red-600">{meta.error}</p>
@@ -532,11 +587,13 @@ const Inventory = () => {
                                   borderColor: theme.border,
                                 }}
                               >
-                                <option value="GRAMS">grams</option>
-                                <option value="KGS">kgs</option>
-                                <option value="POUNDS">pounds</option>
-                                <option value="LITERS">liters</option>
+                                <option value="GRAMS">Grams (gms)</option>
+                                <option value="KGS">Kilograms (kgs)</option>
+                                <option value="POUNDS">Pounds (lbs)</option>
+                                <option value="LITERS">Liters (l)</option>
+                                <option value="ML">Milliliters (ml)</option>
                                 <option value="PIECES">pieces</option>
+                                <option value="BOXES">boxes</option>
                               </select>
                             </div>
                           )}

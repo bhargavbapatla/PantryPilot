@@ -181,7 +181,7 @@ function DataTable<TData>({
                         hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none
                     "
                     >
-                    {[10, 20, 50].map((size) => (
+                    {[5, 10, 20, 50].map((size) => (
                         <option key={size} value={size}>
                         {size}
                         </option>
