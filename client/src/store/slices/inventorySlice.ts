@@ -14,6 +14,7 @@ export interface InventoryItem {
   unit: Unit;
   quantity: number;
   price?: number;
+  remainingStock?: number;
   isLowStockAlert?: boolean;
   lowStockThreshold?: number;
   lowStockThresholdUnit?: Unit;

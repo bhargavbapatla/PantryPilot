@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { RecipeItem } from './recipesSlice';
 
-export type OrderStatus = 'Pending' | 'Completed' | 'Cancelled';
+export type OrderStatus = 'PENDING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
 
 export interface OrderItem {
   id: string;

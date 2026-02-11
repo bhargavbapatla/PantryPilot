@@ -29,6 +29,14 @@ const convertToGrams = (weight: number, unit: string) => {
   return weight * (map[unit] || 1);
 };
 
+const convertToStockBaseUnits = (weight: number, unit: InventoryItem["unit"]) => {
+  if (unit === "LITERS") return weight * 1000; // milliliters
+  if (unit === "MILLILITERS") return weight;   // milliliters
+  if (unit === "KGS") return weight * 1000;    // grams
+  if (unit === "POUNDS") return weight * 453.592; // grams
+  return weight; // GRAMS, PIECES, BOXES treated as grams-equivalent
+};
+
 const Inventory = () => {
   const { theme } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
@@ -206,6 +214,17 @@ const Inventory = () => {
     { header: "Weight", accessorKey: "weight" },
     { header: "Unit", accessorKey: "unit" },
     { header: "Quantity", accessorKey: "quantity" },
+    {
+      header: "Remaining Stock",
+      accessorKey: "remainingStock",
+      cell: ({ row }) => {
+        const item = row.original;
+        const value = item.remainingStock;
+        if (value === undefined || value === null) return "-";
+        const unitLabel = (item.unit === "LITERS" || item.unit === "MILLILITERS") ? "ml" : "gms";
+        return `${value} ${unitLabel}`;
+      },
+    },
     { header: "Price", accessorKey: "price" },
     {
       header: "Actions",
