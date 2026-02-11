@@ -37,7 +37,7 @@ type OrderFormValues = {
   address: string;
   items: FormItem[];
   orderDate: string;
-  status: "Pending" | "Completed" | "Cancelled";
+  status: "PENDING" | "ONGOING" | "COMPLETED" | "CANCELLED";
   grandTotal: string;
 };
 
@@ -132,12 +132,11 @@ const Orders = () => {
       )
       .min(1, "Please add at least one product"),
     orderDate: Yup.string().required("Order date is required"),
-    status: Yup.mixed().oneOf(["Pending", "Completed", "Cancelled"]).required(),
+    status: Yup.mixed().oneOf(["PENDING", "ONGOING", "COMPLETED", "CANCELLED"]).required(),
     grandTotal: Yup.number().typeError("Must be a number").required("Total is required"),
   }), [customers]);
 
   // --- FORMIK ---
-  console.log("editingItem", editingItem);
   const formik = useFormik<OrderFormValues>({
     enableReinitialize: true,
     initialValues: {
@@ -151,7 +150,7 @@ const Orders = () => {
         sellingPrice: item.sellingPrice
       })) || [],
       orderDate: editingItem?.orderDate ? new Date(editingItem.orderDate).toISOString().split('T')[0] : "",
-      status: (editingItem?.status as any) ?? "Pending",
+      status: (editingItem?.status as any) ?? "PENDING",
       grandTotal: editingItem ? String(editingItem.grandTotal) : "",
     },
     validationSchema: validationSchema,
@@ -331,9 +330,10 @@ const Orders = () => {
         const value = row.original.status;
         const baseClasses = "inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium";
         let colorClasses = "";
-        if (value === "Pending") colorClasses = "bg-[#F0F1FA] text-[#4F5AED]";
-        else if (value === "Cancelled") colorClasses = "bg-[#FAF0F3] text-[#D12953]";
-        else if (value === "Completed") colorClasses = "bg-[#E1FCEF] text-[#14804A]";
+        if (value === "PENDING") colorClasses = "bg-[#F0F1FA] text-[#4F5AED]";
+        else if (value === "ONGOING") colorClasses = "bg-[#FEF3C7] text-[#B45309]";
+        else if (value === "CANCELLED") colorClasses = "bg-[#FAF0F3] text-[#D12953]";
+        else if (value === "COMPLETED") colorClasses = "bg-[#E1FCEF] text-[#14804A]";
         return <span className={`${baseClasses} ${colorClasses}`}>{value}</span>;
       },
     },
@@ -444,7 +444,7 @@ const Orders = () => {
     loadInitialData();
   }, [dispatch]);
 
-  console.log("formik.values", formik.values);
+  console.log("formik.values", formik);
   return (
     <div>
       <div className="relative">
@@ -482,9 +482,10 @@ const Orders = () => {
               <label className="text-sm font-medium text-left" style={{ color: theme.text }}>Status</label>
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2 border rounded-md text-left outline-none text-sm" style={{ backgroundColor: theme.surfaceAlt, color: theme.text, borderColor: theme.border }}>
                 <option value="">All</option>
-                <option value="Pending">Pending</option>
-                <option value="Completed">Completed</option>
-                <option value="Cancelled">Cancelled</option>
+                <option value="PENDING">Pending</option>
+                <option value="ONGOING">Ongoing</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
               </select>
             </div>
           </div>
@@ -680,9 +681,10 @@ const Orders = () => {
                           <div className="space-y-2">
                             <label className="text-sm font-semibold text-gray-700">Status</label>
                             <select name="status" value={formik.values.status} onChange={formik.handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white h-[42px] mt-auto">
-                              <option value="Pending">Pending</option>
-                              <option value="Completed">Completed</option>
-                              <option value="Cancelled">Cancelled</option>
+                              <option value="PENDING">Pending</option>
+                              <option value="ONGOING">Ongoing</option>
+                              <option value="COMPLETED">Completed</option>
+                              <option value="CANCELLED">Cancelled</option>
                             </select>
                           </div>
                         </div>

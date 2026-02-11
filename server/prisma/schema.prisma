@@ -36,6 +36,12 @@ enum Category {
   PACKAGING
 }
 
+enum Status {
+  PENDING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
 model Inventory {
   id                    String       @id @default(uuid())
   name                  String
@@ -49,6 +55,7 @@ model Inventory {
   expiryAlert           Boolean?     @default(false)
   quantity              Int
   price                 Float
+  remainingStock        Int?
   ingredients           Ingredient[]
   category              Category      @default(INGREDIENTS)
   createdAt             DateTime     @default(now())
@@ -102,7 +109,7 @@ model Order {
   customerName String
   customer     Customer?   @relation(fields: [customerId], references: [id])
   customerId   String?
-  status       String      @default("pending")
+  status       Status      @default(PENDING)
   orderItems   OrderItem[]
   grandTotal   Float
   orderDate    DateTime    @default(now())
