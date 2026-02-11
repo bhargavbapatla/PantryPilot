@@ -21,7 +21,7 @@ export const getInventory = async (req: Request, res: Response) => {
 
 export const createInventory = async (req: Request, res: Response) => {
   try {
-    const { name, quantity, price, unit, isLowStockAlert, lowStockThreshold, weight } = req.body;
+    const { name, quantity, price, unit, isLowStockAlert, lowStockThreshold, weight, category } = req.body;
     const inventory = await prisma.inventory.create({
       data: {
         name,
@@ -31,6 +31,7 @@ export const createInventory = async (req: Request, res: Response) => {
         isLowStockAlert,
         lowStockThreshold,
         weight,
+        category,
       },
     });
     return res.status(200).json({

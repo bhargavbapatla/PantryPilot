@@ -25,8 +25,15 @@ enum Unit {
   GRAMS
   KGS
   POUNDS
-  LITERS // Optional: Good to add now if you use milk/oil later
-  PIECES // Optional: For things like eggs
+  LITERS
+  MILLILITERS
+  PIECES
+  BOXES
+}
+
+enum Category {
+  INGREDIENTS
+  PACKAGING
 }
 
 model Inventory {
@@ -43,6 +50,7 @@ model Inventory {
   quantity              Int
   price                 Float
   ingredients           Ingredient[]
+  category              Category      @default(INGREDIENTS)
   createdAt             DateTime     @default(now())
 }
 
