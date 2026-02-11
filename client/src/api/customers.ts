@@ -1,13 +1,13 @@
 import { authorizedAPI } from './api';
-import { customer } from './paths';
-import type { RecipeItem } from '../store/slices/recipesSlice';
+import { customer as customerPath } from './paths';
+import type { Customer } from '../store/slices/customerSlice';
 
 // Assuming Product maps to RecipeItem based on context
 type ProductItem = RecipeItem;
 
 export const getCustomers = async () => {
     try {
-        const response = await authorizedAPI.get(customer);
+        const response = await authorizedAPI.get(customerPath);
         return { data: response.data.data, status: response.status, message: response.data.message || 'Customers fetched successfully' };
 
     } catch (error: any) {
@@ -29,7 +29,7 @@ export const getCustomers = async () => {
 
 export const getCustomerById = async (id: string) => {
     try {
-        const response = await authorizedAPI.get(`${customer}/${id}`);
+        const response = await authorizedAPI.get(`${customerPath}/${id}`);
         return { data: response.data.data, status: response.status, message: response.data.message || 'Customer fetched successfully' };
     } catch (error: any) {
         if (error.response) {
@@ -47,9 +47,9 @@ export const getCustomerById = async (id: string) => {
         }
     }
 }
-export const createCustomer = async (customer: any) => {
+export const createCustomer = async (customerData: Customer | Omit<Customer, 'id'>) => {
     try {
-        const response = await authorizedAPI.post(customer, customer);
+        const response = await authorizedAPI.post(customerPath, customerData);
         return { data: response.data.data, status: response.status, message: response.data.message || 'Customer posted successfully' };
     } catch (error: any) {
         if (error.response) {
@@ -68,9 +68,9 @@ export const createCustomer = async (customer: any) => {
     }
 }
 
-export const updateCustomerById = async (customer: ProductItem, id: string) => {
+export const updateCustomerById = async (customerData: Customer | Omit<Customer, 'id'>, id: string) => {
     try {
-        const response = await authorizedAPI.put(`${customer}/${id}`, customer);
+        const response = await authorizedAPI.put(`${customerPath}/${id}`, customerData);
         return { data: response.data.data, status: response.status, message: response.data.message || 'Customer updated successfully' };
     } catch (error: any) {
         if (error.response) {
@@ -91,7 +91,7 @@ export const updateCustomerById = async (customer: ProductItem, id: string) => {
 
 export const deleteCustomerById = async (id: string) => {
     try {
-        const response = await authorizedAPI.delete(`${customer}/${id}`);
+        const response = await authorizedAPI.delete(`${customerPath}/${id}`);
         return { data: response.data, status: response.status, message: response.data.message || 'Customer deleted successfully'};
     } catch (error: any) {
         if (error.response) {

@@ -36,6 +36,7 @@ import {
   ReceiptLong as OrdersIcon,
   Assessment as ReportsIcon,
   RestaurantMenu as RecipesIcon,
+  People as CustomersIcon,
   Logout as LogoutIcon,
   Settings as SettingsIcon,
   Notifications as NotificationsIcon,
@@ -70,10 +71,13 @@ const DashboardLayout = () => {
     { label: 'Dashboard', to: '/dashboard', icon: <DashboardIcon fontSize="small" /> },
     { label: 'Inventory', to: '/inventory', icon: <InventoryIcon fontSize="small" /> },
     { label: 'Recipes', to: '/recipes', icon: <RecipesIcon fontSize="small" /> },
+    { label: 'Customers', to: '/customers', icon: <CustomersIcon fontSize="small" /> },
     { label: 'Orders', to: '/orders', icon: <OrdersIcon fontSize="small" /> },
     { label: 'Reports & Analysis', to: '/reports', icon: <ReportsIcon fontSize="small" /> },
     { label: 'Settings', to: '/settings', icon: <SettingsIcon fontSize="small" /> },
   ];
+  const mainMenuItems = menuItems.filter((i) => i.label !== 'Settings');
+  const settingsMenuItem = menuItems.find((i) => i.label === 'Settings');
 
   const drawerWidth = isCollapsed ? 72 : 240; // Slightly wider collapsed state for better icon centering
 
@@ -90,10 +94,13 @@ const DashboardLayout = () => {
         position="fixed"
         sx={{
           zIndex: (z) => z.zIndex.drawer + 1,
-          bgcolor: '#ffffff',
+          bgcolor: alpha('#ffffff', 0.78),
+          backdropFilter: 'saturate(180%) blur(10px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(10px)',
           color: '#111827',
-          borderBottom: '1px solid #e5e7eb',
-          boxShadow: 'none',
+          borderBottom: '1px solid rgba(229,231,235,0.6)',
+          boxShadow: '0 8px 24px rgba(17,24,39,0.06)',
+          transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
         }}
       >
         <Toolbar>
@@ -184,8 +191,9 @@ const DashboardLayout = () => {
           Main
         </Typography>
 
-        <List sx={{ px: 2 }}>
-          {menuItems.map((item) => {
+        <Box sx={{ px: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <List>
+          {mainMenuItems.map((item) => {
             const isActive =
               location.pathname === item.to ||
               (location.pathname.startsWith(item.to + '/') && item.to !== '/dashboard');
@@ -254,7 +262,73 @@ const DashboardLayout = () => {
               </Tooltip>
             );
           })}
-        </List>
+          </List>
+
+          {settingsMenuItem && (
+            <Box sx={{ mt: 'auto', pb: 2 }}>
+              {(() => {
+                const item = settingsMenuItem;
+                const isActive =
+                  location.pathname === item.to ||
+                  (location.pathname.startsWith(item.to + '/') && item.to !== '/dashboard');
+                return (
+                  <Tooltip
+                    key={item.to}
+                    title={isCollapsed ? item.label : ''}
+                    placement="right"
+                    arrow
+                  >
+                    <ListItemButton
+                      component={Link}
+                      to={item.to}
+                      selected={isActive}
+                      sx={{
+                        minHeight: 48,
+                        justifyContent: isCollapsed ? 'center' : 'flex-start',
+                        px: 2.5,
+                        mb: 0.5,
+                        borderRadius: 2,
+                        color: isActive ? 'primary.main' : 'text.secondary',
+                        bgcolor: isActive ? alpha(muiTheme.palette.primary.main, 0.08) : 'transparent',
+                        '&:hover': {
+                          bgcolor: isActive 
+                            ? alpha(muiTheme.palette.primary.main, 0.12) 
+                            : alpha(muiTheme.palette.action.hover, 0.05),
+                          color: isActive ? 'primary.main' : 'text.primary',
+                          transform: 'translateX(4px)',
+                        },
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 0,
+                          mr: isCollapsed ? 0 : 2,
+                          justifyContent: 'center',
+                          color: isActive ? 'inherit' : 'text.secondary',
+                          transition: 'margin 0.2s',
+                        }}
+                      >
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.label}
+                        primaryTypographyProps={{
+                          fontSize: '0.875rem',
+                          fontWeight: isActive ? 600 : 500,
+                        }}
+                        sx={{
+                          opacity: isCollapsed ? 0 : 1,
+                          transition: 'opacity 0.2s',
+                        }}
+                      />
+                    </ListItemButton>
+                  </Tooltip>
+                );
+              })()}
+            </Box>
+          )}
+        </Box>
       </Drawer>
 
       {/* 3. MAIN CONTENT (Kept exactly as it was) */}
