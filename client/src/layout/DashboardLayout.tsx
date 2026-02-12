@@ -53,7 +53,7 @@ const DashboardLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
-  const [notificationsAnchor, setNotificationsAnchor] = useState<null | HTMLElement>(null);
+  // removed unused notifications anchor
 
   const profileOpen = Boolean(profileAnchor);
   
@@ -116,7 +116,7 @@ const DashboardLayout = () => {
             PantryPilot
           </Typography>
 
-          <IconButton onClick={(e) => setNotificationsAnchor(e.currentTarget)}>
+          <IconButton onClick={() => navigate('/orders')}>
             <Badge badgeContent={unreadOrderIds.length} color="error">
               <NotificationsIcon fontSize="small" />
             </Badge>

@@ -7,7 +7,6 @@ import Button from "../../components/Button";
 import { userSignup } from "../../api/auth";
 import toast from "react-hot-toast";
 import { useAuth } from "../../features/auth/authContext";
-import Loader from "../../components/Loader";
 import { useState } from "react";
 
 const Signup = () => {

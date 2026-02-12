@@ -2,9 +2,6 @@ import { authorizedAPI } from './api';
 import { customer as customerPath } from './paths';
 import type { Customer } from '../store/slices/customerSlice';
 
-// Assuming Product maps to RecipeItem based on context
-type ProductItem = RecipeItem;
-
 export const getCustomers = async () => {
     try {
         const response = await authorizedAPI.get(customerPath);

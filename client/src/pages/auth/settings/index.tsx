@@ -2,14 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../features/auth/authContext";
 import { toast } from "react-hot-toast";
-import { Modal, Box } from "@mui/material";
+import { Modal } from "@mui/material";
 import Button from "../../../components/Button";
 
 const Settings = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // removed unused mounted state
 
   const handleDeleteAccount = () => {
     handleOpen()
@@ -24,7 +24,6 @@ const Settings = () => {
   };
 
   const handleOpen = () => {
-    setMounted(true);
     requestAnimationFrame(() => setConfirmOpen(true));
   };
 

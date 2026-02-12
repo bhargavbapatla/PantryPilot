@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { type ColumnDef } from "@tanstack/react-table";
 import * as Yup from "yup";
-import { Field, FormikProvider, useFormik } from "formik";
-import { motion, AnimatePresence } from "framer-motion";
+import { Field, FormikProvider, useFormik, type FieldProps } from "formik";
+// removed unused framer-motion imports
 import Button from "../../../components/Button";
 import DataTable from "../../../components/table/DataTable";
 import TextField from "../../../components/TextField";
@@ -29,13 +29,7 @@ const convertToGrams = (weight: number, unit: string) => {
   return weight * (map[unit] || 1);
 };
 
-const convertToStockBaseUnits = (weight: number, unit: InventoryItem["unit"]) => {
-  if (unit === "LITERS") return weight * 1000; // milliliters
-  if (unit === "MILLILITERS") return weight;   // milliliters
-  if (unit === "KGS") return weight * 1000;    // grams
-  if (unit === "POUNDS") return weight * 453.592; // grams
-  return weight; // GRAMS, PIECES, BOXES treated as grams-equivalent
-};
+// removed unused convertToStockBaseUnits
 
 const Inventory = () => {
   const { theme } = useAuth();
@@ -76,7 +70,7 @@ const Inventory = () => {
       lowStockThresholdUnit: editingItem?.lowStockThresholdUnit ?? "GRAMS",
       isExpiryAlert: editingItem?.isExpiryAlert ?? false,
       expiryValue: editingItem?.expiryValue ? String(editingItem.expiryValue) : "",
-      expiryUnit: editingItem?.expiryUnit ?? "days",
+      expiryUnit: editingItem?.expiryUnit ?? "DAYS",
     },
     validationSchema: Yup.object({
         category: Yup.string().oneOf(["INGREDIENTS", "PACKAGING"]).required("Category is required"),
@@ -124,7 +118,7 @@ const Inventory = () => {
         then: (schema) => schema.typeError("Enter a number").min(1, "Must be positive").required("Expiry value is required"),
         otherwise: (schema) => schema.notRequired(),
       }),
-      expiryUnit: Yup.mixed<InventoryItem["expiryUnit"]>().when("isExpiryAlert", {
+      expiryUnit: Yup.string().when("isExpiryAlert", {
         is: true,
         then: (schema) => schema.oneOf(["DAYS", "MONTHS", "YEARS"]).required("Unit is required"),
         otherwise: (schema) => schema.notRequired(),
@@ -150,7 +144,7 @@ const Inventory = () => {
       if (editingItem) {
         if (editingItem.id) {
           setLoading(true);
-          const { status, data, message } = await editInventory(payload, editingItem.id);
+          const { status, message } = await editInventory(payload, editingItem.id);
 
           if (status == 200) {
             dispatch(
@@ -188,20 +182,7 @@ const Inventory = () => {
     handleOpen();
   };
 
-  const handleDelete = async (id: string) => {
-    setDeleteModalOpen(true);
-    setLoading(true);
-    const { status, message } = await deleteInventory(deleteId);
-    console.log("deleteId", deleteId, status);
-
-    if (status == 200) {
-      dispatch(deleteItem(id));
-      toast.success(message || "Item deleted");
-    } else {
-      toast.error(message || "Failed to delete item");
-    }
-    setLoading(false);
-  };
+  // removed unused handleDelete
 
   const handleDeleteButton = (id: string) => {
     // handleDelete(deleteItemId);
@@ -260,7 +241,7 @@ const Inventory = () => {
               type="button"
               title="Delete"
               variant="ghost"
-              onClick={() => handleDeleteButton(item.id)}
+              onClick={() => item.id && handleDeleteButton(item.id)}
               className="rounded-md p-1 text-red-600/70 hover:text-red-600 hover:bg-red-50"
             >
               <svg
@@ -435,7 +416,7 @@ const Inventory = () => {
                     </div>
                   </div>
                   <Field name="name">
-                    {({ field, meta }) => (
+                    {({ field, meta }: FieldProps) => (
                       <TextField
                         label="Item Name"
                         name="name"
@@ -449,7 +430,7 @@ const Inventory = () => {
                   </Field>
                   {formik.values.unit !== 'BOXES' && formik.values.category !== 'PACKAGING' && (
                     <Field name="weight">
-                      {({ field, meta }) => (
+                      {({ field, meta }: FieldProps) => (
                         <TextField
                           label="Weight"
                           name="weight"
@@ -464,7 +445,7 @@ const Inventory = () => {
                     </Field>
                   )}
                   <Field name="unit">
-                    {({ field, meta }) => (
+                    {({ field, meta }: FieldProps) => (
                       <div className="flex flex-col space-y-1">
                         <label
                           className="text-sm font-medium text-left"
@@ -502,7 +483,7 @@ const Inventory = () => {
                     )}
                   </Field>
                   <Field name="quantity">
-                    {({ field, meta }) => (
+                    {({ field, meta }: FieldProps) => (
                       <TextField
                         label="Quantity"
                         name="quantity"
@@ -517,7 +498,7 @@ const Inventory = () => {
                   </Field>
 
                   <Field name="price">
-                    {({ field, meta }) => (
+                    {({ field, meta }: FieldProps) => (
                       <TextField
                         label="Price"
                         name="price"
@@ -532,7 +513,7 @@ const Inventory = () => {
                   </Field>
 
                   <Field name="isLowStockAlert">
-                    {({ field }) => (
+                    {({ field }: FieldProps) => (
                       <div className="flex items-center space-x-2">
                         <input
                           type="checkbox"
@@ -578,7 +559,7 @@ const Inventory = () => {
                     <div className="flex space-x-2">
                       <div className="flex-1">
                         <Field name="lowStockThreshold">
-                          {({ field, meta }) => (
+                          {({ field, meta }: FieldProps) => (
                             <TextField
                               label="Low Stock Threshold"
                               name="lowStockThreshold"
@@ -594,7 +575,7 @@ const Inventory = () => {
                       </div>
                       <div className="w-1/3">
                         <Field name="lowStockThresholdUnit">
-                          {({ field, meta }) => (
+                          {({ field }: FieldProps) => (
                             <div className="flex flex-col space-y-1">
                               <label className="text-sm font-medium text-left invisible">Unit</label>
                               <select
@@ -610,7 +591,7 @@ const Inventory = () => {
                                 <option value="KGS">Kilograms (kgs)</option>
                                 <option value="POUNDS">Pounds (lbs)</option>
                                 <option value="LITERS">Liters (l)</option>
-                                <option value="ML">Milliliters (ml)</option>
+                                <option value="MILLILITERS">Milliliters (ml)</option>
                                 <option value="PIECES">pieces</option>
                                 <option value="BOXES">boxes</option>
                               </select>
@@ -622,7 +603,7 @@ const Inventory = () => {
                   )}
 
                   <Field name="isExpiryAlert">
-                    {({ field }) => (
+                    {({ field }: FieldProps) => (
                       <div className="flex items-center space-x-2">
                         <input
                           type="checkbox"
@@ -646,7 +627,7 @@ const Inventory = () => {
                     <div className="flex space-x-2">
                       <div className="flex-1">
                         <Field name="expiryValue">
-                          {({ field, meta }) => (
+                          {({ field, meta }: FieldProps) => (
                             <TextField
                               label="Expires In"
                               name="expiryValue"
@@ -662,7 +643,7 @@ const Inventory = () => {
                       </div>
                       <div className="w-1/3">
                         <Field name="expiryUnit">
-                          {({ field, meta }) => (
+                          {({ field }: FieldProps) => (
                             <div className="flex flex-col space-y-1">
                               <label className="text-sm font-medium text-left invisible">Unit</label>
                               <select
@@ -674,9 +655,9 @@ const Inventory = () => {
                                   borderColor: theme.border,
                                 }}
                               >
-                                <option value="days">Days</option>
-                                <option value="months">Months</option>
-                                <option value="years">Years</option>
+                                <option value="DAYS">Days</option>
+                                <option value="MONTHS">Months</option>
+                                <option value="YEARS">Years</option>
                               </select>
                             </div>
                           )}

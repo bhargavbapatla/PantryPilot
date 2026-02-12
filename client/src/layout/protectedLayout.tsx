@@ -1,4 +1,4 @@
-import { Outlet, Link, Navigate } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/authContext';
 
 const ProtectedLayout = () => {

@@ -9,7 +9,7 @@ import Button from "../../../components/Button";
 import DataTable from "../../../components/table/DataTable";
 import TextField from "../../../components/TextField";
 import { addOrder, deleteOrder, updateOrder, setOrders } from "../../../store/slices/ordersSlice";
-import type { Order, OrderItem } from "../../../store/slices/ordersSlice";
+import type { OrderItem } from "../../../store/slices/ordersSlice";
 import type { RootState, AppDispatch } from "../../../store";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../features/auth/authContext";
@@ -72,7 +72,7 @@ const Orders = () => {
   };
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [editingItem, setEditingItem] = useState<Order | null>(null);
+  const [editingItem, setEditingItem] = useState<OrderItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -141,9 +141,9 @@ const Orders = () => {
     enableReinitialize: true,
     initialValues: {
       customerName: editingItem?.customerName ?? "",
-      phoneNumber: editingItem?.customer?.phoneNumber ?? "",
-      address: editingItem?.customer?.address ?? "",
-      items: editingItem?.orderItems?.map(item => ({
+      phoneNumber: editingItem?.phoneNumber ?? "",
+      address: editingItem?.address ?? "",
+      items: editingItem?.orderItems?.map((item: any) => ({
         productId: item.product.id,
         productName: item.product?.name || "Unknown Product",
         quantity: item.quantity,
@@ -190,7 +190,7 @@ const Orders = () => {
             status: data.status,
             grandTotal: data.grandTotal,
           };
-          dispatch(updateOrder({ id: editingItem.id, ...mappedOrder }));
+          dispatch(updateOrder(mappedOrder));
           toast.success(message || "Order updated");
           if (isNewCustomer) {
             dispatch(addCustomer({
@@ -316,7 +316,7 @@ const Orders = () => {
     setDeleteId(null);
   };
 
-  const columns: ColumnDef<Order, unknown>[] = [
+  const columns: ColumnDef<OrderItem, unknown>[] = [
     { header: "Customer", accessorKey: "customerName" },
     {
       header: "Date",
@@ -548,7 +548,7 @@ const Orders = () => {
                           freeSolo
                           options={customers.map(c => c.name)}
                           value={formik.values.customerName}
-                          onInputChange={(e, newInputValue) => handleCustomerChange(newInputValue)}
+                          onInputChange={(_, newInputValue) => handleCustomerChange(newInputValue)}
                           renderInput={(params) => (
                             <MuiTextField {...params} label="Customer Name" name="customerName"
                               error={formik.touched.customerName && Boolean(formik.errors.customerName)}
@@ -564,8 +564,8 @@ const Orders = () => {
 
                         {isNewCustomer && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeIn">
-                            <TextField label="Phone Number" name="phoneNumber" value={formik.values.phoneNumber} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.phoneNumber && formik.errors.phoneNumber} required containerClassName="w-full" />
-                            <TextField label="Address" name="address" value={formik.values.address} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.address && formik.errors.address} required containerClassName="w-full" />
+                            <TextField label="Phone Number" name="phoneNumber" value={formik.values.phoneNumber} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.phoneNumber && formik.errors.phoneNumber ? formik.errors.phoneNumber : undefined} required containerClassName="w-full" />
+                            <TextField label="Address" name="address" value={formik.values.address} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.address && formik.errors.address ? formik.errors.address : undefined} required containerClassName="w-full" />
                           </div>
                         )}
                       </div>
@@ -697,7 +697,7 @@ const Orders = () => {
                           value={formik.values.grandTotal}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
-                          error={formik.touched.grandTotal && formik.errors.grandTotal}
+                          error={formik.touched.grandTotal && formik.errors.grandTotal ? formik.errors.grandTotal : undefined}
                           required
                           containerClassName="w-full"
                         />

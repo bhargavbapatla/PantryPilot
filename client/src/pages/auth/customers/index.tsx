@@ -14,14 +14,12 @@ import ConfirmationModal from "../../../components/ConfirmationModal";
 import Loader from "../../../components/Loader";
 import { getCustomers, createCustomer, updateCustomerById, deleteCustomerById } from "../../../api/customers";
 import Drawer from "@mui/material/Drawer";
-import { motion } from "framer-motion";
 
 const Customers = () => {
   const { theme } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const items = useSelector((state: RootState) => state.customers.items);
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState<Customer | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -29,14 +27,12 @@ const Customers = () => {
   const transitionMs = 250;
 
   const handleOpen = () => {
-    setMounted(true);
-    requestAnimationFrame(() => setOpen(true));
+    setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
     setTimeout(() => {
-      setMounted(false);
       setEditingItem(null);
     }, transitionMs);
   };
@@ -77,7 +73,7 @@ const Customers = () => {
       };
 
       if (editingItem?.id) {
-        const { status, data, message } = await updateCustomerById(payload as any, editingItem.id);
+        const { status, message } = await updateCustomerById(payload as any, editingItem.id);
         if (status === 200) {
           dispatch(updateCustomer({ id: editingItem.id, ...payload }));
           toast.success(message || "Customer updated");
@@ -238,10 +234,10 @@ const Customers = () => {
             <FormikProvider value={formik}>
               <div className="px-5 py-4 space-y-4 flex-1 overflow-y-auto">
                 <div className="grid grid-cols-1 gap-3">
-                  <TextField label="Name" name="name" value={formik.values.name} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.name && formik.errors.name} required />
-                  <TextField label="Email" name="email" value={formik.values.email as any} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.email && formik.errors.email} />
-                  <TextField label="Phone" name="phone" value={formik.values.phone} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.phone && formik.errors.phone} required />
-                  <TextField label="Address" name="address" value={formik.values.address} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.address && formik.errors.address} required />
+                  <TextField label="Name" name="name" value={formik.values.name} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.name && formik.errors.name ? formik.errors.name : undefined} required />
+                  <TextField label="Email" name="email" value={formik.values.email as any} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.email && formik.errors.email ? formik.errors.email : undefined} />
+                  <TextField label="Phone" name="phone" value={formik.values.phone} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.phone && formik.errors.phone ? formik.errors.phone : undefined} required />
+                  <TextField label="Address" name="address" value={formik.values.address} onChange={formik.handleChange} onBlur={formik.handleBlur} error={formik.touched.address && formik.errors.address ? formik.errors.address : undefined} required />
                 </div>
               </div>
               <div className="px-5 py-3 border-t flex items-center justify-end space-x-2" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>

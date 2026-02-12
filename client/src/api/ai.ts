@@ -1,9 +1,5 @@
 import { authorizedAPI } from './api';
-import { ai, orders, Product } from './paths';
-import type { RecipeItem } from '../store/slices/recipesSlice';
-
-// Assuming Product maps to RecipeItem based on context
-type ProductItem = RecipeItem;
+import { ai } from './paths';
 
 export const askSousChefAi = async (query: string) => {
     try {
