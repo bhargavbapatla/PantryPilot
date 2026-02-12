@@ -5,6 +5,12 @@ import { prisma } from "../config/db.js";
 
 export const getAllDashboardStatsController = async (req, res) => {
     try {
+        const userFilter = req.userId
+            ? {
+                  userId: req.userId,
+              }
+            : {};
+
         const [
             totalInventoryCount,
             lowStockCount,
@@ -12,19 +18,26 @@ export const getAllDashboardStatsController = async (req, res) => {
             inventoryItems
         ] = await Promise.all([
 
-            prisma.inventory.count(),
+            prisma.inventory.count({
+                where: userFilter,
+            }),
 
             prisma.inventory.count({
                 where: {
+                    ...userFilter,
                     quantity: { lte: prisma.inventory.fields.lowStockThreshold }
                 }
             }),
 
             prisma.order.count({
-                where: { status: "pending" }
+                where: {
+                    ...userFilter,
+                    status: "pending",
+                }
             }),
 
             prisma.inventory.findMany({
+                where: userFilter,
                 select: { price: true, quantity: true, name: true, lowStockThreshold: true }
             })
         ]);

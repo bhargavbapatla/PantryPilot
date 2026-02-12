@@ -32,7 +32,11 @@ const calculateRemainingStock = (
 
 export const getInventory = async (req, res) => {
   try {
-    const inventory = await prisma.inventory.findMany();
+    const inventory = await prisma.inventory.findMany({
+      where: {
+        userId: req.userId ?? undefined,
+      },
+    });
     return res.status(200).json({
       message: 'Inventory fetched successfully',
       status: 200,
@@ -68,6 +72,13 @@ export const createInventory = async (req, res) => {
         weight,
         category,
         remainingStock,
+        user: req.userId
+          ? {
+              connect: {
+                id: req.userId,
+              },
+            }
+          : undefined,
       },
     });
     return res.status(200).json({
@@ -95,6 +106,18 @@ export const updateInventory = async (req, res) => {
       numericWeight,
       unit
     );
+    const existing = await prisma.inventory.findFirst({
+      where: {
+        id: id,
+        userId: req.userId,
+      },
+    });
+    if (!existing) {
+      return res.status(404).json({
+        message: 'Inventory not found',
+        status: 404,
+      });
+    }
     const inventory = await prisma.inventory.update({
       where: {
         id: id,
@@ -127,6 +150,18 @@ export const updateInventory = async (req, res) => {
 export const deleteInventory = async (req, res) => {
   try {
     const { id } = req.params;
+    const existing = await prisma.inventory.findFirst({
+      where: {
+        id: id,
+        userId: req.userId,
+      },
+    });
+    if (!existing) {
+      return res.status(404).json({
+        message: 'Inventory not found',
+        status: 404,
+      });
+    }
     const inventory = await prisma.inventory.delete({
       where: {
         id: id,

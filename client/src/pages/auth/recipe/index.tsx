@@ -33,9 +33,10 @@ const toGrams = (value: number, unit: Unit): number =>
 type IngredientForm = {
   id: string;
   inventoryId: string;
-  quantityNeeded: string;
+  quantityNeeded?: string;
   unit: Unit;
   price: number;
+  quantity?: string;
 };
 
 const Recipes = () => {
@@ -74,7 +75,7 @@ const Recipes = () => {
           id: ing.id,
           inventoryId: ing.inventoryId ?? "",
           quantityNeeded:
-            ing.quantityNeeded !== undefined ? String(ing.quantityNeeded) : "",
+            ing.quantity !== undefined ? String(ing.quantity) : "",
           unit: ing.unit ?? "GRAMS",
           price: ing.price !== undefined ? ing.price : 0,
         }))
@@ -199,6 +200,9 @@ const Recipes = () => {
       handleClose();
     },
   });
+
+  console.log("editingItem.ingredients", editingItem?.ingredients, formik?.values?.ingredients);
+
 
   const handleEdit = async (item: RecipeItem) => {
     handleOpen();

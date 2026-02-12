@@ -13,25 +13,30 @@ export const askAssistant = async (req, res) => {
 
         // 1. Fetch Context Data (The "Eyes")
         // We run these in parallel for speed
+        const userFilter = req.userId
+            ? {
+                  userId: req.userId,
+              }
+            : {};
+
         const [allStock, lowStockItems, recentOrders] = await Promise.all([
-
-            // Get all inventory (simplified)
             prisma.product.findMany({
-                select: { name: true, totalCostPrice: true,  }
+                where: userFilter,
+                select: { name: true, totalCostPrice: true },
             }),
-
-            // Get low stock
             prisma.inventory.findMany({
-                where: { quantity: { lte: 10 } },
-                select: { name: true, quantity: true, unit: true }
+                where: {
+                    ...userFilter,
+                    quantity: { lte: 10 },
+                },
+                select: { name: true, quantity: true, unit: true },
             }),
-
-            // Get recent orders
             prisma.order.findMany({
+                where: userFilter,
                 take: 5,
                 orderBy: { createdAt: 'desc' },
-                include: { customer: { select: { name: true } } }
-            })
+                include: { customer: { select: { name: true } } },
+            }),
         ]);
 
         // 2. Call the AI Service (The "Brain")

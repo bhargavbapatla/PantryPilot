@@ -7,6 +7,7 @@ export interface RecipeIngredient {
   quantityNeeded: number;
   unit: Unit;
   price: number;
+  quantity?: string;
 }
 
 export interface RecipeItem {

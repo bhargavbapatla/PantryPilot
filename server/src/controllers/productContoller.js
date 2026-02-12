@@ -5,6 +5,9 @@ const { Request, Response } = pkg;
 
 export const getAllProducts = async (req, res) => {
     const products = await prisma.product.findMany({
+        where: {
+            userId: req.userId ?? undefined,
+        },
         orderBy: { createdAt: 'desc' },
         select: {
             id: true,
@@ -15,18 +18,18 @@ export const getAllProducts = async (req, res) => {
                 select: {
                     inventory: {
                         select: {
-                            name: true
-                        }
-                    }
-                }
-            }
-        }
+                            name: true,
+                        },
+                    },
+                },
+            },
+        },
     });
     return res.status(200).json({
         message: 'Products fetched successfully',
         status: 200,
         data: products,
-    })
+    });
 }
 
 export const getProductById = async (req, res) => {
@@ -131,12 +134,19 @@ export const createProduct = async (req, res) => {
                         inventoryId: i.inventoryId,
                         quantity: i.quantityNeeded,
                         unit: i.unit,
-                    }))
-                }
+                    })),
+                },
+                user: req.userId
+                    ? {
+                          connect: {
+                              id: req.userId,
+                          },
+                      }
+                    : undefined,
             },
             include: {
-                ingredients: true
-            }
+                ingredients: true,
+            },
         })
 
         return res.status(200).json({
@@ -206,6 +216,18 @@ export const updateProduct = async (req, res) => {
         console.log("Total Cost Price:", totalCostPrice.toFixed(2));
         console.log("ingredients:", ingredients);
 
+        const existing = await prisma.product.findFirst({
+            where: {
+                id,
+                userId: req.userId,
+            },
+        });
+        if (!existing) {
+            return res.status(404).json({
+                message: 'Product not found',
+                status: 404,
+            });
+        }
         const product = await prisma.product.update({
             where: {
                 id,
@@ -216,17 +238,17 @@ export const updateProduct = async (req, res) => {
                 description,
                 totalCostPrice,
                 ingredients: {
-                    deleteMany: {}, // Remove existing ingredients
-                    create: ingredients.map((i) => ({ // Add new ingredients
+                    deleteMany: {},
+                    create: ingredients.map((i) => ({
                         inventoryId: i.inventoryId,
                         quantity: i.quantityNeeded,
                         unit: i.unit,
-                    }))
-                }
+                    })),
+                },
             },
             include: {
-                ingredients: true
-            }
+                ingredients: true,
+            },
         })
         return res.status(200).json({
             message: 'Product updated successfully',
@@ -245,6 +267,18 @@ export const updateProduct = async (req, res) => {
 
 export const deleteProduct = async (req, res) => {  
     const { id } = req.params;
+    const existing = await prisma.product.findFirst({
+        where: {
+            id,
+            userId: req.userId,
+        },
+    });
+    if (!existing) {
+        return res.status(404).json({
+            message: 'Product not found',
+            status: 404,
+        });
+    }
     const product = await prisma.product.delete({
         where: {
             id,

@@ -144,13 +144,13 @@ const Inventory = () => {
       if (editingItem) {
         if (editingItem.id) {
           setLoading(true);
-          const { status, message } = await editInventory(payload, editingItem.id);
+          const { status, message, data } = await editInventory(payload, editingItem.id);
 
           if (status == 200) {
             dispatch(
               updateItem({
                 id: editingItem.id,
-                ...payload,
+                ...data,
               })
             );
             toast.success(message || "Item updated");
