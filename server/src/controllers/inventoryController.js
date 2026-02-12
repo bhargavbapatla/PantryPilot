@@ -1,17 +1,8 @@
 import pkg from 'express';
 const { Request, Response } = pkg;
-import { prisma } from "../config/db.ts";
+import { prisma } from "../config/db.js";
 
-type Unit =
-  | 'GRAMS'
-  | 'KGS'
-  | 'POUNDS'
-  | 'LITERS'
-  | 'MILLILITERS'
-  | 'PIECES'
-  | 'BOXES';
-
-const unitToBaseFactor: Record<Unit, number> = {
+const unitToBaseFactor = {
   GRAMS: 1,
   KGS: 1000,
   POUNDS: 453.592,
@@ -22,10 +13,10 @@ const unitToBaseFactor: Record<Unit, number> = {
 };
 
 const calculateRemainingStock = (
-  quantity: number,
-  weight: number,
-  unit: Unit
-): number => {
+  quantity,
+  weight,
+  unit
+) => {
   if (!quantity || !weight) {
     return 0;
   }
@@ -39,7 +30,7 @@ const calculateRemainingStock = (
   return quantity * gramsPerUnit;
 };
 
-export const getInventory = async (req: Request, res: Response) => {
+export const getInventory = async (req, res) => {
   try {
     const inventory = await prisma.inventory.findMany();
     return res.status(200).json({
@@ -56,7 +47,7 @@ export const getInventory = async (req: Request, res: Response) => {
   }
 };
 
-export const createInventory = async (req: Request, res: Response) => {
+export const createInventory = async (req, res) => {
   try {
     const { name, quantity, price, unit, isLowStockAlert, lowStockThreshold, weight, category } = req.body;
     const numericQuantity = Number(quantity) || 0;
@@ -64,7 +55,7 @@ export const createInventory = async (req: Request, res: Response) => {
     const remainingStock = calculateRemainingStock(
       numericQuantity,
       numericWeight,
-      unit as Unit
+      unit
     );
     const inventory = await prisma.inventory.create({
       data: {
@@ -93,7 +84,7 @@ export const createInventory = async (req: Request, res: Response) => {
   }
 };
 
-export const updateInventory = async (req: Request, res: Response) => {
+export const updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, quantity, price, unit, isLowStockAlert, lowStockThreshold, weight } = req.body;
@@ -102,7 +93,7 @@ export const updateInventory = async (req: Request, res: Response) => {
     const remainingStock = calculateRemainingStock(
       numericQuantity,
       numericWeight,
-      unit as Unit
+      unit
     );
     const inventory = await prisma.inventory.update({
       where: {
@@ -112,7 +103,7 @@ export const updateInventory = async (req: Request, res: Response) => {
         name,
         quantity: numericQuantity,
         price,
-        unit: unit as Unit,
+        unit: unit,
         isLowStockAlert,
         lowStockThreshold,
         weight: numericWeight,
@@ -133,7 +124,7 @@ export const updateInventory = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteInventory = async (req: Request, res: Response) => {
+export const deleteInventory = async (req, res) => {
   try {
     const { id } = req.params;
     const inventory = await prisma.inventory.delete({
@@ -146,6 +137,10 @@ export const deleteInventory = async (req: Request, res: Response) => {
       status: 200,
     });
   } catch (error) {
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({
+      message: 'Internal server error',
+      status: 500,
+      // error: error.message,
+    });
   }
 };

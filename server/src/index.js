@@ -1,17 +1,17 @@
 import express from 'express';
 import cors from 'cors';
-import userRouter from './routes/user.ts';
-import authRouter from './routes/authRouters.ts';
-import dashboardRouter from './routes/dashboardRoutes.ts';
-import inventoryRouter from './routes/inventoryRoutes.ts';
-import productRouter from './routes/productRoutes.ts';
+import userRouter from './routes/user.js';
+import authRouter from './routes/authRouters.js';
+import dashboardRouter from './routes/dashboardRoutes.js';
+import inventoryRouter from './routes/inventoryRoutes.js';
+import productRouter from './routes/productRoutes.js';
 import {config} from 'dotenv';
-import {connectDB, disconnectDB} from './config/db.ts';
+import {connectDB, disconnectDB} from './config/db.js';
 import swaggerUi from 'swagger-ui-express';
-import { swaggerSpec } from './config/swagger.ts';
-import orderRouter from './routes/orderRoutes.ts';
-import customerRouter from './routes/customerRouters.ts';
-import aiRouter from './routes/aiRoutes.ts';
+import { swaggerSpec } from './config/swagger.js';
+import orderRouter from './routes/orderRoutes.js';
+import customerRouter from './routes/customerRouters.js';
+import aiRouter from './routes/aiRoutes.js';
 config();
 connectDB();
 

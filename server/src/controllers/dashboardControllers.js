@@ -1,9 +1,9 @@
 import pkg from 'express';
 const { Request, Response } = pkg;
-import { prisma } from "../config/db.ts";
+import { prisma } from "../config/db.js";
 
 
-export const getAllDashboardStatsController = async (req: Request, res: Response) => {
+export const getAllDashboardStatsController = async (req, res) => {
     try {
         const [
             totalInventoryCount,
