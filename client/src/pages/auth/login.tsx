@@ -1,21 +1,20 @@
-import { Field, FormikProvider, useFormik } from 'formik';
+import { Field, FormikProvider, useFormik, type FieldProps } from 'formik';
 import * as Yup from 'yup';
 import TextField from '../../components/TextField';
 import Button from '../../components/Button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../features/auth/authContext';
 import { useState } from 'react';
-import Loader from '../../components/Loader';
 import { googleSSOLogin, loginUser } from '../../api/auth';
 import toast from 'react-hot-toast';
-import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const { login, theme } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const formik = useFormik({
     initialValues: {
@@ -126,7 +125,7 @@ const Login = () => {
       <form onSubmit={formik.handleSubmit} className="space-y-4">
         <FormikProvider value={formik}>
           <Field name="email">
-            {({ meta }) => (
+            {({ meta }: FieldProps) => (
               <TextField
                 label="Email"
                 name="email"
@@ -142,7 +141,7 @@ const Login = () => {
           </Field>
 
           <Field name="password">
-            {({ meta }) => (
+            {({ meta }: FieldProps) => (
               <TextField
                 label="Password"
                 name="password"

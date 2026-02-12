@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // import DashboardLayout from '@/layouts/DashboardLayout';
 import AuthLayout from '../layout/authLayout';
 import Loader from '../components/Loader'; // A simple spinner component
-import { useAuth } from '../features/auth/authContext';
 import ProtectedLayout from '../layout/protectedLayout';
 import PublicLayout from '../layout/publicLayout';
 import DashboardLayout from '../layout/DashboardLayout';
@@ -24,7 +23,7 @@ const Landing = lazy(() => import('../pages/auth/landingPage'));
 
 
 const AppRoutes = () => {
-  const { token } = useAuth();
+  // const { token } = useAuth();
   return (
     // Suspense shows a fallback UI while the lazy chunk is downloading
     <Suspense fallback={<Loader />}>

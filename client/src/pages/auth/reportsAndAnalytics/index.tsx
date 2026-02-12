@@ -45,9 +45,9 @@ const ReportsAndAnalytics = () => {
       const yTo = gsap.quickTo(textContainerRef.current, "y", { duration: 0.8, ease: "power3" });
 
       const handleMouseMove = (e: MouseEvent) => {
-        const { clientX, clientY, innerWidth, innerHeight } = e;
-        const xFactor = (clientX / innerWidth - 0.5) * 30; 
-        const yFactor = (clientY / innerHeight - 0.5) * 30;
+        const { clientX, clientY } = e;
+        const xFactor = (clientX / window.innerWidth - 0.5) * 30; 
+        const yFactor = (clientY / window.innerHeight - 0.5) * 30;
         xTo(xFactor);
         yTo(yFactor);
       };

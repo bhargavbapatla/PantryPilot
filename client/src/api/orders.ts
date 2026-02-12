@@ -1,9 +1,23 @@
 import { authorizedAPI } from './api';
-import { orders, Product } from './paths';
-import type { RecipeItem } from '../store/slices/recipesSlice';
+import { orders } from './paths';
+import type { OrderStatus } from '../store/slices/ordersSlice';
 
-// Assuming Product maps to RecipeItem based on context
-type ProductItem = RecipeItem;
+interface OrderPayload {
+  customer: {
+    customerId: string | null;
+    name: string;
+    phone: string;
+    address: string;
+  };
+  items: Array<{
+    productId: string;
+    quantity: number;
+    sellingPrice: number;
+  }>;
+  grandTotal: number;
+  orderDate: string;
+  status: OrderStatus;
+}
 
 export const getOrders = async () => {
     try {
@@ -47,7 +61,7 @@ export const getOrderById = async (id: string) => {
         }
     }
 }
-export const createOrder = async (order: any) => {
+export const createOrder = async (order: OrderPayload) => {
     try {
         const response = await authorizedAPI.post(orders, order);
         return { data: response.data.data, status: response.status, message: response.data.message || 'Order posted successfully' };
@@ -68,7 +82,7 @@ export const createOrder = async (order: any) => {
     }
 }
 
-export const updateOrderById = async (order: ProductItem, id: string) => {
+export const updateOrderById = async (order: OrderPayload, id: string) => {
     try {
         const response = await authorizedAPI.put(`${orders}/${id}`, order);
         return { data: response.data.data, status: response.status, message: response.data.message || 'Order updated successfully' };

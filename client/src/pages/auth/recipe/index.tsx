@@ -24,6 +24,7 @@ const unitToGramsFactor: Record<Unit, number> = {
   LITERS: 1000,
   MILLILITERS: 1,
   PIECES: 1,
+  BOXES: 1,
 };
 
 const toGrams = (value: number, unit: Unit): number =>
@@ -73,7 +74,7 @@ const Recipes = () => {
           id: ing.id,
           inventoryId: ing.inventoryId ?? "",
           quantityNeeded:
-            ing.quantity !== undefined ? String(ing.quantity) : "",
+            ing.quantityNeeded !== undefined ? String(ing.quantityNeeded) : "",
           unit: ing.unit ?? "GRAMS",
           price: ing.price !== undefined ? ing.price : 0,
         }))
@@ -149,6 +150,8 @@ const Recipes = () => {
         })
       );
 
+      const totalCostPrice = getTotalCost();
+
       if (editingItem) {
         setInitiateEdit(false);
         const { data, status, message } = await updateProductsbyId({
@@ -157,6 +160,7 @@ const Recipes = () => {
           makingCharge: Number(values.makingCharge),
           description: values.description,
           ingredients: mappedIngredients,
+          totalCostPrice,
         }, editingItem.id || "")
         if (status === 201 || status === 200) {
           console.log("datadatadata", data);
@@ -174,6 +178,7 @@ const Recipes = () => {
           makingCharge: Number(values.makingCharge),
           description: values.description,
           ingredients: mappedIngredients,
+          totalCostPrice,
         })
         if (status === 201 || status === 200) {
           dispatch(
@@ -209,7 +214,8 @@ const Recipes = () => {
     setLoading(false);
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id?: string) => {
+    if (!id) return;
     setDeleteId(id);
     setDeleteModalOpen(true);
   };
@@ -219,7 +225,7 @@ const Recipes = () => {
 
     setLoading(true);
 
-    const { data, status, message } = await deleteProductById(deleteId);
+    const { status, message } = await deleteProductById(deleteId);
     if (status === 200 || status === 204) {
       dispatch(deleteRecipe(deleteId));
       toast.success("Recipe deleted");
@@ -379,23 +385,6 @@ const Recipes = () => {
     return Number((makingCharge + ingredientsCost).toFixed(2));
   };
 
-  const loadInitialData = async () => {
-    try {
-      setLoading(true);
-      const { data, message, status } = await getProducts();
-      console.log("loadInitialData", data);
-      if (status === 200) {
-        dispatch(setRecipes(data));
-      } else {
-        toast.error(message || "Error loading recipes");
-        console.error("Error loading inventory items:", message);
-      }
-    } catch (error) {
-      console.error("Error loading inventory items:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loadInventoryItems = async () => {
     setLoading(true);

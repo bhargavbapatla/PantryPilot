@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../features/auth/authContext";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
@@ -15,7 +14,6 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { theme } = useAuth();
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const heroRef = useRef<HTMLElement | null>(null);
   const workflowRef = useRef<HTMLDivElement | null>(null);

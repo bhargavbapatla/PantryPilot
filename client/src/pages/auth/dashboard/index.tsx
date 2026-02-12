@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import React, { useEffect, useState, useMemo, memo } from "react"; // Added useMemo and memo
+import * as echarts from "echarts";
 import EChart from "../../../components/charts/EChart";
 import { useAuth } from "../../../features/auth/authContext";
 import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
@@ -129,23 +130,23 @@ const ChatInput = ({ query, setQuery, onSend, loading, isExpanded = false }: Cha
 const DashboardCharts = memo(({ theme }: { theme: any }) => {
   
   // Use useMemo to prevent object recreation
-  const salesChartOption = useMemo(() => ({
+  const salesChartOption: echarts.EChartsOption = useMemo(() => ({
     grid: { top: 32, left: 40, right: 16, bottom: 32 },
     textStyle: { fontFamily: theme.fontFamily, color: theme.text },
     tooltip: { trigger: "axis", backgroundColor: "#fff", borderColor: "#e2e8f0", textStyle: { color: "#1e293b" } },
     xAxis: { type: "category", boundaryGap: false, data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], axisLine: { lineStyle: { color: "#e2e8f0" } }, axisLabel: { color: "#64748b" }, axisTick: { lineStyle: { color: "#e2e8f0" } } },
     yAxis: { type: "value", axisLine: { lineStyle: { color: "#e2e8f0" } }, axisLabel: { color: "#64748b" }, splitLine: { lineStyle: { color: "#f1f5f9" } } },
     series: [{ name: "Sales", type: "line", smooth: true, showSymbol: false, itemStyle: { color: "#4f46e5" }, areaStyle: { color: "rgba(79, 70, 229, 0.1)" }, data: [120, 200, 150, 80, 70, 110, 130] }],
-  }), [theme]);
+  }) as echarts.EChartsOption, [theme]);
 
-  const stockChartOption = useMemo(() => ({
+  const stockChartOption: echarts.EChartsOption = useMemo(() => ({
     grid: { top: 32, left: 40, right: 16, bottom: 32 },
     textStyle: { fontFamily: theme.fontFamily, color: theme.text },
     tooltip: { trigger: "item", backgroundColor: "#fff", borderColor: "#e2e8f0", textStyle: { color: "#1e293b" } },
     xAxis: { type: "category", data: ["Peripherals", "Cables", "Accessories", "Monitors", "Keyboards"], axisLine: { lineStyle: { color: "#e2e8f0" } }, axisLabel: { color: "#64748b" }, axisTick: { lineStyle: { color: "#e2e8f0" } } },
     yAxis: { type: "value", axisLine: { lineStyle: { color: "#e2e8f0" } }, axisLabel: { color: "#64748b" }, splitLine: { lineStyle: { color: "#f1f5f9" } } },
     series: [{ name: "In Stock", type: "bar", barWidth: '40%', data: [320, 180, 260, 140, 220], itemStyle: { borderRadius: [4, 4, 0, 0], color: "#3b82f6" } }],
-  }), [theme]);
+  }) as echarts.EChartsOption, [theme]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
