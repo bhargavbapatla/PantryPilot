@@ -50,7 +50,7 @@ export const postInventory = async (inventory: InventoryItem) => {
 export const editInventory = async (inventory: InventoryItem, id: string) => {
     try {
         const response = await authorizedAPI.put(`${Inventory}/${id}`, inventory);
-        return { data: response.data, status: response.status, message: response.data.message || 'Inventory edited successfully' };
+        return { data: response.data.data, status: response.status, message: response.data.message || 'Inventory edited successfully' };
     } catch (error: any) {
         if (error.response) {
             console.log("Error response data:", error.response.data);

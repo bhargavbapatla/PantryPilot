@@ -17,7 +17,18 @@ export const createCustomer = async (req, res) => {
             });
         } else {
             customerResp = await prisma.customer.create({
-                data: {name, phone, address},
+                data: {
+                    name,
+                    phone,
+                    address,
+                    user: req.userId
+                        ? {
+                              connect: {
+                                  id: req.userId,
+                              },
+                          }
+                        : undefined,
+                },
             });
         }
 
@@ -36,7 +47,11 @@ export const createCustomer = async (req, res) => {
 
 export const getCustomers = async (req, res) => {   
     try {
-        const customers = await prisma.customer.findMany();
+        const customers = await prisma.customer.findMany({
+            where: {
+                userId: req.userId ?? undefined,
+            },
+        });
         return res.status(200).json({
             message: 'Customers fetched successfully',
             status: 200,
@@ -66,6 +81,14 @@ export const getCustomerById = async (req, res) => {
 
 export const updateCustomer = async (req, res) => {
     try {
+        const existing = await prisma.customer.findFirst({
+            where: {
+                id: req.params.id,
+            },
+        });
+        if (!existing || existing.userId !== req.userId) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
         const customer = await prisma.customer.update({
             where: {
                 id: req.params.id,
@@ -97,6 +120,14 @@ export const deleteCustomer = async (req, res) => {
             });
         }
 
+        const existing = await prisma.customer.findFirst({
+            where: {
+                id: req.params.id,
+            },
+        });
+        if (!existing || existing.userId !== req.userId) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
         const customer = await prisma.customer.delete({
             where: {
                 id: req.params.id,

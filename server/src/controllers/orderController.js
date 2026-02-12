@@ -183,22 +183,29 @@ export const createOrder = async (req, res) => {
                 status: status || "Pending",
                 orderDate: new Date(orderDate),
                 customer: {
-                    connect: { id: customerResp.id }
+                    connect: { id: customerResp.id },
                 },
                 orderItems: {
                     create: items.map((item) => ({
                         product: { connect: { id: item.productId } },
                         quantity: Number(item.quantity),
-                        sellingPrice: Number(item.sellingPrice)
-                    }))
-                }
+                        sellingPrice: Number(item.sellingPrice),
+                    })),
+                },
+                user: req.userId
+                    ? {
+                          connect: {
+                              id: req.userId,
+                          },
+                      }
+                    : undefined,
             },
             include: {
                 orderItems: {
-                    include: { product: true }
+                    include: { product: true },
                 },
-                customer: true
-            }
+                customer: true,
+            },
         });
 
         await sendOrderConfirmation(
@@ -239,8 +246,11 @@ export const updateOrder = async (req, res) => {
             }
 
             // 1. Fetch existing order WITH its old items to check if we need to restore stock
-            const existingOrder = await tx.order.findUnique({
-                where: { id: req.params.id },
+            const existingOrder = await tx.order.findFirst({
+                where: {
+                    id: req.params.id,
+                    userId: req.userId,
+                },
                 include: {
                     orderItems: {
                         include: {
@@ -340,6 +350,9 @@ export const updateOrder = async (req, res) => {
 export const getAllOrders = async (req, res) => {
     try {
         const orders = await prisma.order.findMany({
+            where: {
+                userId: req.userId ?? undefined,
+            },
             include: {
                 orderItems: {
                     include: { product: true }
@@ -382,8 +395,18 @@ export const getAllOrders = async (req, res) => {
 
 export const deleteOrder = async (req, res) => {
     try {
-        // You might want to wrap this in a transaction to call `restoreInventoryForOrder` 
-        // if the status was Ongoing/Completed, to ensure deleted orders put stock back!
+        const existingOrder = await prisma.order.findFirst({
+            where: {
+                id: req.params.id,
+                userId: req.userId,
+            },
+        });
+        if (!existingOrder) {
+            return res.status(404).json({
+                message: "Order not found",
+                status: 404,
+            });
+        }
         const order = await prisma.order.delete({
             where: { id: req.params.id },
         });
