@@ -1,44 +1,12 @@
-import { prisma } from "../config/db.ts";
+import { prisma } from "../config/db.js";
 import pkg from "express";
-import { sendOrderConfirmation } from "../services/whatsappService.ts";
-import type { Prisma } from "@prisma/client";
+import { sendOrderConfirmation } from "../services/whatsappService.js";
+
 
 const { Request, Response } = pkg;
+    
 
-// need to do the flow again with new field remaining stock
-// --- TYPES ---
-type OrderIngredient = {
-    inventoryId: string;
-    quantity: number;
-    unit: string | null;
-};
-
-type OrderProduct = {
-    id: string;
-    ingredients: OrderIngredient[];
-};
-
-type OrderItemWithProduct = {
-    quantity: number;
-    product: OrderProduct | null;
-};
-
-type OrderWithItems = {
-    id: string;
-    status: string;
-    orderItems: OrderItemWithProduct[];
-};
-
-type InventoryRecord = {
-    id: string;
-    quantity: number;
-    weight: number;
-    unit: string;
-    remainingStock: number;
-};
-
-// --- UTILS ---
-const unitToGramsFactor: Record<string, number> = {
+const unitToGramsFactor = {
     GRAMS: 1,
     KGS: 1000,
     POUNDS: 453.592,
@@ -48,7 +16,7 @@ const unitToGramsFactor: Record<string, number> = {
     BOXES: 1,
 };
 
-const toGrams = (value: number, unit: string | null | undefined): number => {
+const toGrams = (value, unit) => {
     if (!unit) return value;
     const factor = unitToGramsFactor[unit] ?? 1;
     return value * factor;
@@ -57,10 +25,10 @@ const toGrams = (value: number, unit: string | null | undefined): number => {
 // --- INVENTORY HELPERS ---
 
 const deductInventoryForOrder = async (
-    order: OrderWithItems,
-    tx: Prisma.TransactionClient
-): Promise<void> => {
-    const requirements: Record<string, number> = {};
+    order,
+    tx
+) => {
+    const requirements = {};
 
     for (const orderItem of order.orderItems) {
         if (!orderItem.product) continue;
@@ -83,7 +51,7 @@ const deductInventoryForOrder = async (
         where: { id: { in: inventoryIds } },
     });
 
-    const inventoryMap = new Map<string, InventoryRecord>();
+    const inventoryMap = new Map();
     for (const inventory of inventories) {
         inventoryMap.set(inventory.id, {
             id: inventory.id,
@@ -125,10 +93,10 @@ const deductInventoryForOrder = async (
 
 // NEW: Restores inventory if an order is cancelled or reverted to pending
 const restoreInventoryForOrder = async (
-    order: OrderWithItems,
-    tx: Prisma.TransactionClient
-): Promise<void> => {
-    const requirements: Record<string, number> = {};
+    order,
+    tx
+) => {
+    const requirements = {};
 
     for (const orderItem of order.orderItems) {
         if (!orderItem.product) continue;
@@ -151,7 +119,7 @@ const restoreInventoryForOrder = async (
         where: { id: { in: inventoryIds } },
     });
 
-    const inventoryMap = new Map<string, InventoryRecord>();
+    const inventoryMap = new Map();
     for (const inventory of inventories) {
         inventoryMap.set(inventory.id, {
             id: inventory.id,
@@ -192,7 +160,7 @@ const restoreInventoryForOrder = async (
 
 // --- CONTROLLERS ---
 
-export const createOrder = async (req: Request, res: Response) => {
+export const createOrder = async (req, res) => {
     try {
         const { customer, status, orderItems, orderDate, grandTotal, items } = req.body;
         const { name, phone, address, customerId } = customer;
@@ -218,7 +186,7 @@ export const createOrder = async (req: Request, res: Response) => {
                     connect: { id: customerResp.id }
                 },
                 orderItems: {
-                    create: items.map((item: any) => ({
+                    create: items.map((item) => ({
                         product: { connect: { id: item.productId } },
                         quantity: Number(item.quantity),
                         sellingPrice: Number(item.sellingPrice)
@@ -245,16 +213,16 @@ export const createOrder = async (req: Request, res: Response) => {
             status: 200,
             data: newOrder,
         });
-    } catch (error: any) {
+    } catch (error) {
         return res.status(400).json({
             message: 'Error creating order',
             status: 400,
-            error: error.message,
+            error: error?.message ?? "Unknown error",
         });
     }
 }
 
-export const updateOrder = async (req: Request, res: Response) => {
+export const updateOrder = async (req, res) => {
     try {
         const { customer, status, orderDate, grandTotal, items } = req.body;
         const { name, phone, address, customerId } = customer;
@@ -308,7 +276,7 @@ export const updateOrder = async (req: Request, res: Response) => {
                     },
                     orderItems: {
                         deleteMany: {},
-                        create: items.map((item: any) => ({
+                        create: items.map((item) => ({
                             product: { connect: { id: item.productId } },
                             quantity: Number(item.quantity),
                             sellingPrice: Number(item.sellingPrice),
@@ -331,7 +299,7 @@ export const updateOrder = async (req: Request, res: Response) => {
             const isNowOngoingOrCompleted = ["ONGOING", "COMPLETED"].includes(nextStatus.toUpperCase());
             console.log("isNowOngoingOrCompleted",isNowOngoingOrCompleted)
             if (isNowOngoingOrCompleted) {
-                await deductInventoryForOrder(updatedOrder as unknown as OrderWithItems, tx);
+                await deductInventoryForOrder(updatedOrder, tx);
             }
 
             return updatedOrder;
@@ -349,7 +317,7 @@ export const updateOrder = async (req: Request, res: Response) => {
             status: 200,
             data: order,
         });
-    } catch (error: any) {
+    } catch (error) {
         if (error instanceof Error) {
             if (error.message === "ORDER_NOT_FOUND") {
                 return res.status(404).json({ message: "Order not found", status: 404 });
@@ -369,7 +337,7 @@ export const updateOrder = async (req: Request, res: Response) => {
     }
 };
 
-export const getAllOrders = async (req: Request, res: Response) => {
+export const getAllOrders = async (req, res) => {
     try {
         const orders = await prisma.order.findMany({
             include: {
@@ -384,16 +352,16 @@ export const getAllOrders = async (req: Request, res: Response) => {
             status: 200,
             data: orders,
         });
-    } catch (error: any) {
+    } catch (error) {
         return res.status(400).json({
             message: 'Error fetching orders',
             status: 400,
-            error: error.message,
+            error: error?.message ?? "Unknown error",
         });
     }
 }
 
-export const getOrderById = async (req: Request, res: Response) => {
+    export const getOrderById = async (req, res) => {
     try {
         const order = await prisma.order.findUnique({
             where: { id: req.params.id },
@@ -403,16 +371,16 @@ export const getOrderById = async (req: Request, res: Response) => {
             status: 200,
             data: order,
         });
-    } catch (error: any) {
+    } catch (error) {
         return res.status(400).json({
             message: 'Error fetching order',
             status: 400,
-            error: error.message,
+            error: error?.message ?? "Unknown error",
         });
     }
 }
 
-export const deleteOrder = async (req: Request, res: Response) => {
+export const deleteOrder = async (req, res) => {
     try {
         // You might want to wrap this in a transaction to call `restoreInventoryForOrder` 
         // if the status was Ongoing/Completed, to ensure deleted orders put stock back!
@@ -424,11 +392,16 @@ export const deleteOrder = async (req: Request, res: Response) => {
             status: 200,
             data: order,
         });
-    } catch (error: any) {
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === "ORDER_NOT_FOUND") {
+                return res.status(404).json({ message: "Order not found", status: 404 });
+            }
+        }
         return res.status(400).json({
             message: 'Error deleting order',
             status: 400,
-            error: error.message,
+            error: error?.message ?? "Unknown error",
         });
     }
 }

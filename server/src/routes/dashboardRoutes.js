@@ -1,6 +1,6 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/authMiddleware.ts';
-import { getAllDashboardStatsController } from '../controllers/dashboardControllers.ts';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { getAllDashboardStatsController } from '../controllers/dashboardControllers.js';
 
 const router = express.Router();
 router.get('/alldashboardStats', authMiddleware, getAllDashboardStatsController);

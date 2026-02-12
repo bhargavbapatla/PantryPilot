@@ -41,7 +41,7 @@ const options = {
         ],
     },
     // This looks for API documentation inside your route files
-    apis: [path.join(__dirname, '../routes/*.ts')],
+    apis: [path.join(__dirname, '../routes/*.js')],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

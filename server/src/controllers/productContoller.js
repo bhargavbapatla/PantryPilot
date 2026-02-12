@@ -1,9 +1,9 @@
 import pkg from 'express';
-import { prisma } from "../config/db.ts";
+import { prisma } from "../config/db.js";
 const { Request, Response } = pkg;
 
 
-export const getAllProducts = async (req: Request, res: Response) => {
+export const getAllProducts = async (req, res) => {
     const products = await prisma.product.findMany({
         orderBy: { createdAt: 'desc' },
         select: {
@@ -29,7 +29,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
     })
 }
 
-export const getProductById = async (req: Request, res: Response) => {
+export const getProductById = async (req, res) => {
     const { id } = req.params;
 
     const product = await prisma.product.findUnique({
@@ -60,7 +60,7 @@ export const getProductById = async (req: Request, res: Response) => {
 }
 
 
-const getWeightInGrams = (weight: number, unit: string): number => {
+const getWeightInGrams = (weight, unit) => {
     switch (unit) {
         case 'GRAMS': return weight;
         case 'KGS': return weight * 1000;
@@ -71,7 +71,7 @@ const getWeightInGrams = (weight: number, unit: string): number => {
     }
 }
 
-export const createProduct = async (req: Request, res: Response) => {
+export const createProduct = async (req, res) => {
     try {
         const { name, makingCharge, description, ingredients } = req.body;
 
@@ -127,7 +127,7 @@ export const createProduct = async (req: Request, res: Response) => {
                 description,
                 totalCostPrice,
                 ingredients: {
-                    create: ingredients.map((i: any) => ({
+                    create: ingredients.map((i) => ({
                         inventoryId: i.inventoryId,
                         quantity: i.quantityNeeded,
                         unit: i.unit,
@@ -154,7 +154,7 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 }
 
-export const updateProduct = async (req: Request, res: Response) => {
+export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, makingCharge, description, ingredients } = req.body;
@@ -217,7 +217,7 @@ export const updateProduct = async (req: Request, res: Response) => {
                 totalCostPrice,
                 ingredients: {
                     deleteMany: {}, // Remove existing ingredients
-                    create: ingredients.map((i: any) => ({ // Add new ingredients
+                    create: ingredients.map((i) => ({ // Add new ingredients
                         inventoryId: i.inventoryId,
                         quantity: i.quantityNeeded,
                         unit: i.unit,
@@ -243,7 +243,7 @@ export const updateProduct = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteProduct = async (req: Request, res: Response) => {
+export const deleteProduct = async (req, res) => {  
     const { id } = req.params;
     const product = await prisma.product.delete({
         where: {
