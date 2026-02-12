@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, googleSSOLogin } from '../controllers/authController.ts';
+import { register, login, googleSSOLogin } from '../controllers/authController.js';
 
 const router = express.Router();
 

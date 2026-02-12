@@ -1,6 +1,6 @@
 import express from 'express';
-import { createCustomer, deleteCustomer, getCustomers, updateCustomer } from '../controllers/customerController.ts';
-import { authMiddleware } from '../middleware/authMiddleware.ts';
+import { createCustomer, deleteCustomer, getCustomers, updateCustomer } from '../controllers/customerController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 

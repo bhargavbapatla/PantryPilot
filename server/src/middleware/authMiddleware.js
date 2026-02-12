@@ -3,7 +3,7 @@ import pkg from 'express';
 const { verify } = pkg;
 const { Request, Response, NextFunction } = pkg
 
-export const authMiddleware = (req: typeof Request, res: typeof Response, next: typeof NextFunction) => {
+export const authMiddleware = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token) {
         return res.status(401).json({ message: 'No token, authorization denied' });

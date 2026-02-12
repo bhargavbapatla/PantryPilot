@@ -10,10 +10,10 @@ const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 const client = twilio(accountSid, authToken);
 
 export const sendOrderConfirmation = async (
-  to: string, 
-  customerName: string, 
-  totalAmount: number,
-  orderId: string
+  to, 
+  customerName, 
+  totalAmount,
+  orderId
 ) => {
   try {
     // 1. Sanitize Phone Number
@@ -36,7 +36,7 @@ export const sendOrderConfirmation = async (
     });
 
     console.log(`✅ WhatsApp Sent! Message SID: ${message.sid}`);
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Failed to send WhatsApp:", error.message);
   }
 };

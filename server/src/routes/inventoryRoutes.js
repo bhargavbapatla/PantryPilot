@@ -1,6 +1,6 @@
 import express from 'express';
-import { createInventory, deleteInventory, getInventory, updateInventory } from '../controllers/inventoryController.ts';
-import { authMiddleware } from '../middleware/authMiddleware.ts';
+import { createInventory, deleteInventory, getInventory, updateInventory } from '../controllers/inventoryController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 

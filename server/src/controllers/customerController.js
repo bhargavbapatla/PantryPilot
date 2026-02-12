@@ -1,9 +1,9 @@
-import { prisma } from "../config/db.ts";
+import { prisma } from "../config/db.js";
 import pkg from 'express'
 
 const { Request, Response } = pkg;
 
-export const createCustomer = async (req: Request, res: Response) => {
+export const createCustomer = async (req, res) => {
     try {
         const { customer, status, orderItems, orderDate, grandTotal, items } = req.body;
         console.log("customercustomer", customer);
@@ -34,7 +34,7 @@ export const createCustomer = async (req: Request, res: Response) => {
     }
 }
 
-export const getCustomers = async (req: Request, res: Response) => {
+export const getCustomers = async (req, res) => {   
     try {
         const customers = await prisma.customer.findMany();
         return res.status(200).json({
@@ -51,7 +51,7 @@ export const getCustomers = async (req: Request, res: Response) => {
     }
 }
 
-export const getCustomerById = async (req: Request, res: Response) => {
+export const getCustomerById = async (req, res) => {
     try {
         const customer = await prisma.customer.findUnique({
             where: {
@@ -64,7 +64,7 @@ export const getCustomerById = async (req: Request, res: Response) => {
     }
 }
 
-export const updateCustomer = async (req: Request, res: Response) => {
+export const updateCustomer = async (req, res) => {
     try {
         const customer = await prisma.customer.update({
             where: {
@@ -78,7 +78,7 @@ export const updateCustomer = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteCustomer = async (req: Request, res: Response) => {
+export const deleteCustomer = async (req, res) => {
     try {
         const activeOrder = await prisma.order.findFirst({
             where: {

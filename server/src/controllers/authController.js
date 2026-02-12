@@ -1,11 +1,11 @@
-import { prisma } from "../config/db.ts";
+import { prisma } from "../config/db.js";
 import pkg from 'express';
 import bcrypt from 'bcrypt'
-import { generateToken } from "../utils/authhelper.ts";
+import { generateToken } from "../utils/authhelper.js";
 import { OAuth2Client } from 'google-auth-library';
 const { Request, Response } = pkg;
 
-const register = async (req: Request, res: Response) => {
+const register = async (req, res) => {
     const { name, email, password } = req.body;
 
     const userExists = await prisma.user.findUnique({
@@ -39,7 +39,7 @@ const register = async (req: Request, res: Response) => {
     })
 }
 
-const login = async (req: Request, res: Response) => {
+const login = async (req, res) => {
     const { email, password } = req.body;
     const errorMessage = 'Invalid email or password';
     const user = await prisma.user.findUnique({
@@ -78,7 +78,7 @@ const login = async (req: Request, res: Response) => {
     })
 }
 
-const googleSSOLogin = async (req: Request, res: Response) => {
+const googleSSOLogin = async (req, res) => {
     const { googleToken } = req.body;
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     const ticket = await client.verifyIdToken({

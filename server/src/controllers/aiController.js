@@ -1,9 +1,9 @@
 import pkg from "express";
-import { prisma } from "../config/db.ts";
-import { generateBakingAdvice } from "../services/aiService.ts"; // 👈 Import the service
+import { prisma } from "../config/db.js";
+import { sendOrderConfirmation } from "../services/whatsappService.js";
 const { Request, Response } = pkg;
 
-export const askAssistant = async (req: Request, res: Response) => {
+export const askAssistant = async (req, res) => {
     try {
         const { query } = req.body;
 
@@ -49,7 +49,7 @@ export const askAssistant = async (req: Request, res: Response) => {
             data: aiResponse,
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("AI Controller Error:", error);
         return res.status(500).json({ error: "Something went wrong processing your request." });
     }
