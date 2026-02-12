@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+}
+
+enum Unit {
+  GRAMS
+  KGS
+  POUNDS
+  LITERS
+  MILLILITERS
+  PIECES
+  BOXES
+}
+
+enum Category {
+  INGREDIENTS
+  PACKAGING
+}
+
+enum Status {
+  PENDING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+model Inventory {
+  id                    String       @id @default(uuid())
+  name                  String
+  weight                Float
+  unit                  Unit
+  isLowStockAlert       Boolean?     @default(false)
+  lowStockThreshold     Int?
+  lowStockThresholdUnit Unit?
+  expiryDate            DateTime?
+  expiresInDays         Int?
+  expiryAlert           Boolean?     @default(false)
+  quantity              Int
+  price                 Float
+  remainingStock        Int?
+  ingredients           Ingredient[]
+  category              Category      @default(INGREDIENTS)
+  createdAt             DateTime     @default(now())
+}
+
+model Product {
+  id             String       @id @default(uuid())
+  name           String
+  makingCharge   Float
+  description    String?
+  ingredients    Ingredient[]
+  createdAt      DateTime     @default(now())
+  orderItems     OrderItem[]
+  totalCostPrice Float
+}
+
+model Ingredient {
+  id          String    @id @default(uuid())
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  inventoryId String
+  quantity    Int
+  unit        Unit?
+
+  @@unique([productId, inventoryId])
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?   @unique
+  phone     String    @unique
+  address   String?
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model OrderItem {
+  id           String  @id @default(uuid())
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      String
+  product      Product @relation(fields: [productId], references: [id])
+  productId    String
+  quantity     Int
+  sellingPrice Float
+}
+
+model Order {
+  id           String      @id @default(uuid())
+  customerName String
+  customer     Customer?   @relation(fields: [customerId], references: [id])
+  customerId   String?
+  status       Status      @default(PENDING)
+  orderItems   OrderItem[]
+  grandTotal   Float
+  orderDate    DateTime    @default(now())
+  createdAt    DateTime    @default(now())
+}
