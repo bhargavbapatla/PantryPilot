@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { type ColumnDef } from "@tanstack/react-table";
 import * as Yup from "yup";
@@ -374,12 +374,18 @@ const Recipes = () => {
       if (!inventoryItem || !inventoryItem.price) {
         return acc;
       }
-
-      const inventoryItemBaseWeightInGrams = toGrams(inventoryItem.weight, inventoryItem.unit);
-
+      console.log("inventoryItem---", inventoryItem);
+      let inventoryItemBaseWeightInGrams = 0;
+      if (inventoryItem.category === 'INGREDIENTS') {
+      inventoryItemBaseWeightInGrams = (toGrams(inventoryItem.weight, inventoryItem.unit) * inventoryItem.quantity);
+      } else {
+        inventoryItemBaseWeightInGrams = inventoryItem.quantity
+      }
       if (inventoryItemBaseWeightInGrams === 0) return acc;
 
       const pricePerGram = inventoryItem.price / inventoryItemBaseWeightInGrams;
+      console.log("pricePerGram", inventoryItem, inventoryItem.price, inventoryItemBaseWeightInGrams);
+
 
       const quantityNeededInGrams = toGrams(Number(ing.quantityNeeded) || 0, ing.unit);
 
@@ -406,6 +412,23 @@ const Recipes = () => {
     setLoading(false);
 
   };
+
+  const getUnitOptions = (category: string) => {
+    if (category === 'INGREDIENTS') {
+      return <Fragment>
+        <option value="GRAMS">grams</option>
+        <option value="KGS">kgs</option>
+        <option value="POUNDS">pounds</option>
+        <option value="LITERS">liters</option>
+        <option value="PIECES">pieces</option>
+      </Fragment>
+    } else {
+      return <Fragment>
+        <option value="PIECES">pieces</option>
+        <option value="BOXES">Boxes</option>
+      </Fragment>
+    }
+  }
   useEffect(() => {
     // loadInitialData();
     loadInventoryItems();
@@ -723,11 +746,7 @@ const Recipes = () => {
                                       borderColor: theme.border,
                                     }}
                                   >
-                                    <option value="GRAMS">grams</option>
-                                    <option value="KGS">kgs</option>
-                                    <option value="POUNDS">pounds</option>
-                                    <option value="LITERS">liters</option>
-                                    <option value="PIECES">pieces</option>
+                                    {getUnitOptions(inventoryItem?.category)}
                                   </select>
                                 </td>
                                 <td className="px-4 py-2 text-sm">
