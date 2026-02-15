@@ -95,11 +95,23 @@ export const createProduct = async (req, res) => {
                         });
                     }
 
-                    const inventoryItemBaseWeightInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
+                    let inventoryItemBaseWeightInGrams, totalAvailableGrams, quantityNeededInGrams;
+                    if (inventoryItem.category === 'INGREDIENTS') {
+                        inventoryItemBaseWeightInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
 
-                    const totalAvailableGrams = (inventoryItem.quantity || 0) * inventoryItemBaseWeightInGrams;
+                        totalAvailableGrams = (inventoryItem.quantity || 0) * inventoryItemBaseWeightInGrams;
 
-                    const quantityNeededInGrams = getWeightInGrams(item.quantityNeeded || 0, item.unit);
+                        quantityNeededInGrams = getWeightInGrams(item.quantityNeeded || 0, item.unit);
+
+                    } else {
+                        inventoryItemBaseWeightInGrams = inventoryItem.quantity
+
+                        totalAvailableGrams = inventoryItem.quantity || 0;
+
+                        quantityNeededInGrams = item.quantityNeeded || 0;
+
+
+                    }
 
                     if (quantityNeededInGrams > totalAvailableGrams) {
                         return res.status(400).json({
@@ -138,10 +150,10 @@ export const createProduct = async (req, res) => {
                 },
                 user: req.userId
                     ? {
-                          connect: {
-                              id: req.userId,
-                          },
-                      }
+                        connect: {
+                            id: req.userId,
+                        },
+                    }
                     : undefined,
             },
             include: {
@@ -186,12 +198,24 @@ export const updateProduct = async (req, res) => {
                             message: "Inventory item not found."
                         });
                     }
+                    let inventoryItemBaseWeightInGrams, totalAvailableGrams, quantityNeededInGrams;
+                    if (inventoryItem.category === 'INGREDIENTS') {
+                        inventoryItemBaseWeightInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
 
-                    const inventoryItemBaseWeightInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
+                        totalAvailableGrams = (inventoryItem.quantity || 0) * inventoryItemBaseWeightInGrams;
 
-                    const totalAvailableGrams = (inventoryItem.quantity || 0) * inventoryItemBaseWeightInGrams;
+                        quantityNeededInGrams = getWeightInGrams(item.quantityNeeded || 0, item.unit);
 
-                    const quantityNeededInGrams = getWeightInGrams(item.quantityNeeded || 0, item.unit);
+                    } else {
+                        inventoryItemBaseWeightInGrams = inventoryItem.quantity
+
+                        totalAvailableGrams = inventoryItem.quantity || 0;
+
+                        quantityNeededInGrams = item.quantityNeeded || 0;
+
+
+                    }
+
 
                     if (quantityNeededInGrams > totalAvailableGrams) {
                         return res.status(400).json({
@@ -265,7 +289,7 @@ export const updateProduct = async (req, res) => {
     }
 }
 
-export const deleteProduct = async (req, res) => {  
+export const deleteProduct = async (req, res) => {
     const { id } = req.params;
     const existing = await prisma.product.findFirst({
         where: {
