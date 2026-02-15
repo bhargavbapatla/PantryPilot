@@ -35,7 +35,12 @@ const deductInventoryForOrder = async (
 
         for (const ingredient of orderItem.product.ingredients) {
             const requiredQuantity = ingredient.quantity * orderItem.quantity;
-            const requiredGrams = toGrams(requiredQuantity, ingredient.unit);
+            let requiredGrams = 0;
+            if (ingredient.category == "INGREDIENT") {
+                requiredGrams = toGrams(requiredQuantity, ingredient.unit);
+            } else {
+                requiredGrams = requiredQuantity;
+            }
 
             if (!requirements[ingredient.inventoryId]) {
                 requirements[ingredient.inventoryId] = 0;

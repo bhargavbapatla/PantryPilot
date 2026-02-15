@@ -190,6 +190,20 @@ const Inventory = () => {
     setDeleteModalOpen(true);
   };
 
+  const getUnitLabel = (unit: InventoryItem["unit"], value: number) => {
+    switch (unit) {
+      case "BOXES":
+        if (value === 1) return "box";
+        return "boxes";
+      case "LITERS":
+      case "MILLILITERS":
+        return "ml";
+      default:
+        if (value === 1) return "gm";
+        return "gms";
+    }
+  }
+
   const columns: ColumnDef<InventoryItem, unknown>[] = [
     { header: "Name", accessorKey: "name" },
     { header: "Weight", accessorKey: "weight" },
@@ -202,7 +216,7 @@ const Inventory = () => {
         const item = row.original;
         const value = item.remainingStock;
         if (value === undefined || value === null) return "-";
-        const unitLabel = (item.unit === "LITERS" || item.unit === "MILLILITERS") ? "ml" : "gms";
+        const unitLabel = getUnitLabel(item.unit, value);
         return `${value} ${unitLabel}`;
       },
     },

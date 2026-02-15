@@ -413,7 +413,7 @@ const Recipes = () => {
 
   };
 
-  const getUnitOptions = (category: string) => {
+  const getUnitOptions = (category: any) => {
     if (category === 'INGREDIENTS') {
       return <Fragment>
         <option value="GRAMS">grams</option>
