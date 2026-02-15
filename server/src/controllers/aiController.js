@@ -2,7 +2,7 @@ import pkg from "express";
 import { prisma } from "../config/db.js";
 import { sendOrderConfirmation } from "../services/whatsappService.js";
 const { Request, Response } = pkg;
-
+import { generateBakingAdvice } from "../services/aiService.js";
 export const askAssistant = async (req, res) => {
     try {
         const { query } = req.body;
