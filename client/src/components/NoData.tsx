@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import { Inbox as InboxIcon } from '@mui/icons-material';
+import InboxIcon from '@mui/icons-material/Inbox';
 
 interface NoDataProps {
   /**

@@ -29,18 +29,16 @@ import {
   Badge,
   alpha, // Make sure to import alpha
 } from '@mui/material';
-import {
-  Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  Inventory2 as InventoryIcon,
-  ReceiptLong as OrdersIcon,
-  Assessment as ReportsIcon,
-  RestaurantMenu as RecipesIcon,
-  People as CustomersIcon,
-  Logout as LogoutIcon,
-  Settings as SettingsIcon,
-  Notifications as NotificationsIcon,
-} from '@mui/icons-material';
+import MenuIcon from '@mui/icons-material/Menu';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import InventoryIcon from '@mui/icons-material/Inventory2';
+import OrdersIcon from '@mui/icons-material/ReceiptLong';
+import ReportsIcon from '@mui/icons-material/Assessment';
+import RecipesIcon from '@mui/icons-material/RestaurantMenu';
+import CustomersIcon from '@mui/icons-material/People';
+import LogoutIcon from '@mui/icons-material/Logout';
+import SettingsIcon from '@mui/icons-material/Settings';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 const DashboardLayout = () => {
   const { logout, user } = useAuth();
