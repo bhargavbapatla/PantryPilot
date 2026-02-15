@@ -4,22 +4,20 @@ import * as echarts from "echarts";
 import EChart from "../../../components/charts/EChart";
 import { useAuth } from "../../../features/auth/authContext";
 import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
-import { 
-  AutoAwesome,      
-  MicNone,          
-  AttachFile,       
-  ArrowUpward,      
-  OpenInFull,
-  CloseFullscreen,
-  Inventory2Outlined, 
-  WarningAmberRounded,
-  AttachMoneyRounded,
-  ScheduleRounded,
-  TrendingUp,
-  TrendingDown,
-  Close,
-  Visibility 
-} from '@mui/icons-material';
+import AutoAwesome from '@mui/icons-material/AutoAwesome';
+import MicNone from '@mui/icons-material/MicNone';
+import AttachFile from '@mui/icons-material/AttachFile';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
+import OpenInFull from '@mui/icons-material/OpenInFull';
+import CloseFullscreen from '@mui/icons-material/CloseFullscreen';
+import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
+import WarningAmberRounded from '@mui/icons-material/WarningAmberRounded';
+import AttachMoneyRounded from '@mui/icons-material/AttachMoneyRounded';
+import ScheduleRounded from '@mui/icons-material/ScheduleRounded';
+import TrendingUp from '@mui/icons-material/TrendingUp';
+import TrendingDown from '@mui/icons-material/TrendingDown';
+import Close from '@mui/icons-material/Close';
+import Visibility from '@mui/icons-material/Visibility';
 import { askSousChefAi } from "../../../api/ai";
 import toast from "react-hot-toast";
 
