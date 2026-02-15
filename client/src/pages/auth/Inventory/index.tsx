@@ -115,7 +115,7 @@ const Inventory = () => {
       if (!restockingItem?.id) return;
       
       setLoading(true);
-      const payload = {
+      const payload: any = {
         addedQuantity: Number(values.addedQuantity),
         addedWeight: (values.restockUnit === 'BOXES' || restockingItem.category === 'PACKAGING') ? 1 : Number(values.addedWeight),
         addedUnit: values.restockUnit,
