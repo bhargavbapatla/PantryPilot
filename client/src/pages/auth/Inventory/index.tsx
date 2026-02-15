@@ -27,8 +27,16 @@ const convertToGrams = (weight: number, unit: string) => {
   return weight * (map[unit] || 1);
 };
 
-const normalizeForLowStockComparison = (value: number, unit: string) => {
+const normalizeRemaining = (value: number, unit: string) => {
   if (unit === "BOXES" || unit === "PIECES") return value;
+  if (unit === "LITERS" || unit === "MILLILITERS") return value;
+  return convertToGrams(value, unit);
+};
+
+const normalizeThreshold = (value: number, unit: string) => {
+  if (unit === "BOXES" || unit === "PIECES") return value;
+  if (unit === "LITERS") return value * 1000;
+  if (unit === "MILLILITERS") return value;
   return convertToGrams(value, unit);
 };
 
@@ -280,10 +288,10 @@ const Inventory = () => {
         const value = item.remainingStock;
         if (value === undefined || value === null) return "-";
         const unitLabel = getUnitLabel(item.unit, value);
-        const remainingNormalized = normalizeForLowStockComparison(value, item.unit);
+        const remainingNormalized = normalizeRemaining(value, item.unit);
         const thresholdNormalized =
           item.isLowStockAlert && item.lowStockThreshold !== undefined && item.lowStockThresholdUnit
-            ? normalizeForLowStockComparison(Number(item.lowStockThreshold), String(item.lowStockThresholdUnit))
+            ? normalizeThreshold(Number(item.lowStockThreshold), String(item.lowStockThresholdUnit))
             : undefined;
         const isLow =
           Boolean(item.isLowStockAlert) &&

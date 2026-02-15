@@ -169,6 +169,8 @@ const Recipes = () => {
             updateRecipe({ ...data })
           );
           toast.success(message || "Recipe updated");
+          helpers.resetForm();
+          handleClose();
         } else {
           toast.error(message || "Error updating recipe");
         }
@@ -428,6 +430,7 @@ const Recipes = () => {
         <option value="KGS">kgs</option>
         <option value="POUNDS">pounds</option>
         <option value="LITERS">liters</option>
+        <option value="MILLILITERS">ml</option>
         <option value="PIECES">pieces</option>
       </Fragment>
     } else {

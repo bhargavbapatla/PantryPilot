@@ -203,17 +203,12 @@ export const restockInventory = async (req, res) => {
     const isDiscrete = existing.category === 'PACKAGING' || existing.unit === 'BOXES' || existing.unit === 'PIECES';
 
     if (isDiscrete) {
-      // For discrete items, weight doesn't matter. 10 new boxes = 10 added to stock.
       stockToAdd = numericAddedQuantity;
       packsToAdd = numericAddedQuantity;
     } else {
-      // 1. Calculate total raw volume bought (e.g., 1 sack * 10 * 1000 = 10,000 grams)
-      // Fallback to 1 if the unit isn't found in the map
       const restockedBaseValue = numericAddedQuantity * numericAddedWeight * (unitToBaseFactor[addedUnit] || 1);
       stockToAdd = restockedBaseValue;
 
-      // 2. Translate that back into "packs" based on your original item configuration
-      // e.g., Original item is 100g. 10,000g / 100g = 100 packs effectively added.
       const existingBaseWeightPerPack = existing.weight * (unitToBaseFactor[existing.unit] || 1);
       packsToAdd = existingBaseWeightPerPack > 0 ? Math.round(restockedBaseValue / existingBaseWeightPerPack) : 0;
     }
@@ -228,8 +223,77 @@ export const restockInventory = async (req, res) => {
       },
     });
 
+    // ==============================================================
+    // 4. THE RIPPLE EFFECT: CASCADE PRICE UPDATES TO ALL RECIPES
+    // ==============================================================
+    
+    // Step A: Find all products (recipes) that contain this restocked item
+    const affectedProducts = await prisma.product.findMany({
+      where: {
+        ingredients: {
+          some: { inventoryId: id }
+        },
+        userId: req.userId 
+      },
+      include: {
+        ingredients: true
+      }
+    });
+
+    if (affectedProducts.length > 0) {
+      // Step B: Get all unique inventory IDs needed to recalculate these recipes
+      const allInventoryIds = new Set();
+      for (const product of affectedProducts) {
+        for (const ing of product.ingredients) {
+          if (ing.inventoryId) allInventoryIds.add(ing.inventoryId);
+        }
+      }
+
+      // Fetch the latest inventory data for all those ingredients
+      const allInventoryItems = await prisma.inventory.findMany({
+        where: { id: { in: Array.from(allInventoryIds) } }
+      });
+      const invMap = new Map(allInventoryItems.map(inv => [inv.id, inv]));
+
+      // Step C: Recalculate WAC for each affected product and update it
+      for (const product of affectedProducts) {
+        let totalIngredientsCost = 0;
+
+        for (const ing of product.ingredients) {
+          const invItem = invMap.get(ing.inventoryId);
+          if (!invItem) continue;
+
+          let totalHistoricalBaseUnits = 0;
+          let quantityNeededInBaseUnits = 0;
+
+          if (invItem.category !== 'PACKAGING') {
+            const weightOfOnePack = (invItem.weight || 0) * (unitToBaseFactor[invItem.unit] || 1);
+            totalHistoricalBaseUnits = (invItem.quantity || 0) * weightOfOnePack;
+            quantityNeededInBaseUnits = (ing.quantity || 0) * (unitToBaseFactor[ing.unit] || 1);
+          } else {
+            totalHistoricalBaseUnits = invItem.quantity || 0;
+            quantityNeededInBaseUnits = ing.quantity || 0;
+          }
+
+          const averageCostPerBaseUnit = totalHistoricalBaseUnits > 0
+            ? (invItem.price || 0) / totalHistoricalBaseUnits
+            : 0;
+
+          totalIngredientsCost += (averageCostPerBaseUnit * quantityNeededInBaseUnits);
+        }
+
+        const newTotalCostPrice = totalIngredientsCost + (product.makingCharge || 0);
+
+        // Step D: Save the exact new price to the Product database
+        await prisma.product.update({
+          where: { id: product.id },
+          data: { totalCostPrice: newTotalCostPrice }
+        });
+      }
+    }
+
     return res.status(200).json({
-      message: 'Stock replenished successfully!',
+      message: 'Stock replenished and dependent recipes updated!',
       status: 200,
       data: updatedInventory,
     });
